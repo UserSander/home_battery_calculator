@@ -120,6 +120,37 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .note-block{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;font-size:12px;color:var(--text3);line-height:1.8}
 .note-block strong{color:var(--text2);font-weight:500}
 footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+/* ADVISOR */
+.adv-btn{width:100%;padding:.65rem;background:linear-gradient(135deg,rgba(90,219,138,.15),rgba(90,219,138,.05));border:1px solid rgba(90,219,138,.35);border-radius:8px;color:var(--green);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;letter-spacing:.04em;transition:all .2s;margin-bottom:.5rem;font-weight:500}
+.adv-btn:hover{background:linear-gradient(135deg,rgba(90,219,138,.25),rgba(90,219,138,.1));border-color:var(--green)}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto;padding:1.5rem}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem}
+.modal-head h2{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--text)}
+.modal-close{background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;padding:.3rem .7rem;cursor:pointer;transition:all .15s}
+.modal-close:hover{color:var(--text2);border-color:var(--border)}
+.adv-section{margin-bottom:1.2rem}
+.adv-section-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:.7rem;padding-bottom:.35rem;border-bottom:1px solid var(--border)}
+.adv-card{border-radius:10px;padding:1rem 1.1rem;margin-bottom:.6rem}
+.adv-card.green{background:rgba(90,219,138,.07);border:1px solid rgba(90,219,138,.2)}
+.adv-card.amber{background:rgba(240,184,64,.07);border:1px solid rgba(240,184,64,.2)}
+.adv-card.blue{background:rgba(90,180,240,.07);border:1px solid rgba(90,180,240,.2)}
+.adv-card-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:.3rem}
+.adv-card.green .adv-card-title{color:var(--green)}
+.adv-card.amber .adv-card-title{color:var(--amber)}
+.adv-card.blue .adv-card-title{color:#5ab4f0}
+.adv-card-body{font-size:12px;color:var(--text2);line-height:1.7}
+.adv-card-body strong{color:var(--text);font-weight:500}
+.adv-row{display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid var(--border);font-size:12px}
+.adv-row:last-child{border:none}
+.adv-row-lbl{color:var(--text2)}
+.adv-row-val{font-family:'DM Mono',monospace;color:var(--text);font-weight:500}
+.adv-row-val.good{color:var(--green)}
+.adv-row-val.warn{color:var(--amber)}
+/* LIVE BATTERY HINT */
+.bat-hint{background:rgba(90,219,138,.06);border:1px solid rgba(90,219,138,.15);border-radius:7px;padding:.5rem .8rem;font-size:11px;color:var(--green);margin-bottom:.8rem;font-family:'DM Mono',monospace;line-height:1.5;display:none}
+.bat-hint.show{display:block}
 </style>
 </head>
 <body>
@@ -308,11 +339,16 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);fon
     <input type="range" id="sl-netlim" min="0" max="15" step="0.1" value="15" oninput="update()">
   </div>
 
+  <div class="bat-hint" id="bat-hint"></div>
+
   <button class="reset-btn" onclick="resetAll()">&#x21BA; reset alles</button>
 </div>
 
 <!-- RESULTS -->
 <div class="results">
+
+  <button class="adv-btn" onclick="openAdvisor()">&#x2728; Adviseer mij &mdash; ideale provider + batterijgrootte op basis van mijn situatie</button>
+
   <div class="summary-row">
     <div class="kpi" id="kpi-bes">
       <div class="kpi-label">// max besparing/jaar</div>
@@ -415,6 +451,17 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);fon
   <span>// berekening indicatief &mdash; geen financieel advies</span>
   <span>tarieven: allecijfers.nl april 2026 &nbsp;|&nbsp; saldering stopt 01-01-2027</span>
 </footer>
+</div>
+
+<!-- ADVISOR MODAL -->
+<div class="modal-bg" id="adv-modal" onclick="if(event.target===this)closeAdvisor()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>&#x2728; Advies op basis van jouw situatie</h2>
+      <button class="modal-close" onclick="closeAdvisor()">sluiten</button>
+    </div>
+    <div id="adv-content"></div>
+  </div>
 </div>
 
 <script>
@@ -678,6 +725,9 @@ function update(){
   const evC=evKwh*V.nacht;
   const evD=evC*0.97;
 
+  // Live battery hint
+  updateBatHint(V, opwek, net, evKwh);
+
   const tA=huisA+evA,tB=huisB+evB,tC=huisB+evC,tD=huisD+evD;
 
   // Degradatie: jaar 1 = 100%, elk jaar * (1 - degr). TVT met degradatie iteratief berekend.
@@ -891,6 +941,188 @@ function commitField(k,isBat){
 function niKey(e,k,isBat){
   if(e.key==='Enter'){e.preventDefault();commitField(k,isBat);}
   if(e.key==='Escape'){g('ni-'+k).classList.remove('visible');g('lbl-'+k).style.display='';}
+}
+
+// ─── BATTERY HINT ─────────────────────────────────────────────────────────────
+function updateBatHint(V, opwek, netVerbruik, evKwh){
+  const hint = g('bat-hint');
+  // Ideal battery = cover evening peak from own solar + EV charge if applicable
+  // Solar surplus per day (avg): opwek / 365
+  const zonPerDag = opwek / 365;
+  const evPerDag = evKwh / 365;
+  // We want to store: afternoon solar surplus + enough for evening consumption
+  // Evening need: ~40% of daily home use + EV charge per day
+  const avondVerbruik = (netVerbruik / 365) * 0.6; // evening hours
+  const idealBat = Math.max(
+    zonPerDag * 0.7 + (ev ? evPerDag : 0),  // solar-first: store sun + charge car
+    avondVerbruik + (ev ? evPerDag * 0.5 : 0) // consumption-first: cover evening
+  );
+  const idealRounded = Math.round(idealBat / 2) * 2; // round to nearest 2 kWh
+  const current = V.bat;
+  let msg = '', color = '';
+  if(current < idealRounded * 0.7){
+    msg = `Te klein voor jouw situatie. Aanbevolen: ~${idealRounded} kWh (jij hebt ${current} kWh).`;
+    color = 'color:var(--amber)';
+  } else if(current > idealRounded * 1.6){
+    msg = `Groter dan nodig. Optimaal is ~${idealRounded} kWh. Boven dit punt weinig extra rendement.`;
+    color = 'color:var(--text3)';
+  } else {
+    msg = `Goede grootte voor jouw situatie. Optimum ligt rond ${idealRounded} kWh.`;
+    color = '';
+  }
+  hint.innerHTML = `<span style="${color}">${msg}</span>`;
+  hint.className = 'bat-hint show';
+  return idealRounded;
+}
+
+// ─── ADVISOR MODAL ─────────────────────────────────────────────────────────────
+function openAdvisor(){
+  const V={
+    v:nv('v'),kwp:nv('kwp'),yld:nv('yld'),vast:nv('vast'),piek:nv('piek'),
+    nacht:nv('nacht'),tlv:nv('tlv'),km:nv('km'),eff:nv('eff'),aloss:nv('aloss')/100,
+    bat:nv('bat'),inv:nv('inv'),loss:nv('loss')/100,cycli:nv('cycli'),
+    degr:nv('degr')/100,netlim:nv('netlim')
+  };
+  const opwek=V.kwp*V.yld;
+  const dir=Math.min(opwek*0.4,V.v);
+  const ret=opwek-dir;
+  const net=V.v-dir;
+  const evKwh=ev?(V.km/100*V.eff)*(1+V.aloss):0;
+
+  // ── Ideal battery size ──────────────────────────────────────────────────────
+  const zonPerDag=opwek/365;
+  const evPerDag=evKwh/365;
+  const avondVerbruik=(net/365)*0.6;
+  const idealBatRaw=Math.max(
+    zonPerDag*0.7+(ev?evPerDag:0),
+    avondVerbruik+(ev?evPerDag*0.5:0)
+  );
+  const idealBat=Math.max(4, Math.round(idealBatRaw/2)*2);
+  const surplus=ret; // kWh per jaar niet direct verbruikt
+  const batStatus=V.bat<idealBat*0.7?'te klein':V.bat>idealBat*1.6?'groter dan nodig':'goed';
+
+  // ── Score all providers ─────────────────────────────────────────────────────
+  function scoreProvider(p){
+    // Simulate year cost scenario D (bat+dyn) with this provider's tariffs
+    const piek=p.dyn_piek, nacht=p.dyn_nacht, vast=p.vast||p.dyn_piek;
+    const tlvRate=cong?0:(sal?vast:p.tlv);
+    const salVal=ret*tlvRate;
+    const dynGem=(nacht*0.55+piek*0.45);
+    const huisB=net*dynGem*0.89-salVal;
+    const extraZon=Math.min(ret*0.85,V.bat*V.cycli*0.5);
+    const batZon=extraZon*(vast-tlvRate)+(cong?ret*vast*0.7:0);
+    const batArb=Math.min(V.bat*V.cycli*0.5,net*0.35)*(piek-nacht)*(1-V.loss);
+    const batTotal=batZon+batArb;
+    const huisD=Math.max(huisB-batTotal,0);
+    const evD=evKwh*nacht*0.97;
+    return huisD+(ev?evD:0);
+  }
+
+  const scored=PROVIDERS.map(p=>({...p,score:scoreProvider(p)}))
+    .sort((a,b)=>a.score-b.score);
+
+  const topDyn=scored.filter(p=>p.type==='dyn').slice(0,3);
+  const topVast=scored.filter(p=>p.type==='vast').slice(0,3);
+  const topVar=scored.filter(p=>p.type==='var').slice(0,3);
+  const overall=scored[0];
+
+  // ── Battery recommendation ──────────────────────────────────────────────────
+  // Also compute: at what kWh does marginal return drop below 5%?
+  let prevSave=0, satBat=idealBat;
+  for(let b=2;b<=60;b+=2){
+    const eZ=Math.min(ret*0.85,b*V.cycli*0.5);
+    const bZ=eZ*(V.vast-(cong?0:(sal?V.vast:V.tlv)))+(cong?ret*V.vast*0.7:0);
+    const bA=Math.min(b*V.cycli*0.5,net*0.35)*(V.piek-V.nacht)*(1-V.loss);
+    const save=bZ+bA;
+    if(b>4 && (save-prevSave)/prevSave<0.05){ satBat=b-2; break; }
+    prevSave=save;
+  }
+  satBat=Math.max(idealBat,satBat);
+
+  // ── Build HTML ──────────────────────────────────────────────────────────────
+  const ED2=v=>'\u20AC'+v.toFixed(2).replace('.',',');
+  const E2=v=>'\u20AC'+Math.round(v).toLocaleString('nl-NL');
+
+  let html='';
+
+  // Battery advice
+  html+=`<div class="adv-section">
+  <div class="adv-section-title">Ideale batterijgrootte voor jouw situatie</div>
+  <div class="adv-card green">
+    <div class="adv-card-title">Optimum: ${idealBat} kWh bruikbaar</div>
+    <div class="adv-card-body">
+      Op basis van jouw zonne-opwek (${Math.round(opwek).toLocaleString('nl-NL')} kWh/jr), dagelijkse surplus (${zonPerDag.toFixed(1)} kWh/dag gemiddeld)${ev?` en auto-laadvraag (${evPerDag.toFixed(1)} kWh/dag)`:''}.
+      Boven <strong>${satBat} kWh</strong> neemt de marginale besparing per extra kWh minder dan 5% toe &mdash; daarboven betaal je meer dan je terugverdient.
+      ${V.bat<idealBat*0.7?`<br><br><strong style="color:var(--amber)">Jouw huidige ${V.bat} kWh is te klein</strong> voor optimaal rendement.`:
+        V.bat>satBat?`<br><br><strong style="color:var(--text3)">Jouw huidige ${V.bat} kWh gaat boven het verzadigingspunt.</strong> Overweeg te verkleinen.`:
+        `<br><br><strong style="color:var(--green)">Jouw huidige ${V.bat} kWh zit in de goede range.</strong>`}
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.6rem">
+    <div class="adv-card amber" style="cursor:pointer" onclick="applyBatSize(${idealBat});closeAdvisor()">
+      <div class="adv-card-title" style="font-size:12px">Pas aan: ${idealBat} kWh</div>
+      <div class="adv-card-body">Klik om toe te passen</div>
+    </div>
+    <div class="adv-card blue" style="cursor:pointer" onclick="applyBatSize(${satBat});closeAdvisor()">
+      <div class="adv-card-title" style="font-size:12px">Max rendement: ${satBat} kWh</div>
+      <div class="adv-card-body">Klik om toe te passen</div>
+    </div>
+  </div>
+</div>`;
+
+  // Best overall
+  html+=`<div class="adv-section">
+  <div class="adv-section-title">Beste contract voor jouw situatie (totale jaarkost scenario D)</div>
+  <div class="adv-card green">
+    <div class="adv-card-title">#1 overall &mdash; ${overall.name}</div>
+    <div class="adv-card-body">
+      Geschatte jaarkosten scenario D: <strong>${E2(overall.score)}</strong><br>
+      Type: ${overall.type==='dyn'?'Dynamisch':overall.type==='var'?'Variabel':'Vast'} &bull;
+      ${overall.type==='dyn'?`Piek ${ED2(overall.dyn_piek)}/kWh &bull; Nacht ${ED2(overall.dyn_nacht)}/kWh`:`Tarief ${ED2(overall.vast)}/kWh`}
+    </div>
+  </div>
+</div>`;
+
+  // Top 3 per type
+  html+=`<div class="adv-section">
+  <div class="adv-section-title">Top 3 per contracttype</div>`;
+
+  const renderTop=(list,label,cardClass)=>{
+    if(!list.length) return '';
+    let r=`<div style="margin-bottom:.6rem"><div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:.4rem">${label}</div>`;
+    list.forEach((p,i)=>{
+      r+=`<div class="adv-row">
+        <span class="adv-row-lbl">#${i+1} ${p.name}</span>
+        <span class="adv-row-val ${i===0?'good':''}">${E2(p.score)}/jr &nbsp;<span style="color:var(--text3);font-size:10px">${p.type==='dyn'?`nacht ${ED2(p.dyn_nacht)}`:ED2(p.vast)}</span></span>
+      </div>`;
+    });
+    r+='</div>';
+    return r;
+  };
+
+  html+=renderTop(topDyn,'Dynamisch (beste voor batterij + slim laden)','green');
+  html+=renderTop(topVar,'Variabel','amber');
+  html+=renderTop(topVast,'Vast (zekerheid, minder flex)','blue');
+  html+='</div>';
+
+  // Context
+  html+=`<div class="adv-section">
+  <div class="adv-section-title">Context bij dit advies</div>
+  <div class="adv-card-body" style="font-size:12px;color:var(--text3);line-height:1.8">
+    Rangschikking op basis van jouw verbruik (${V.v.toLocaleString('nl-NL')} kWh/jr), opwek (${Math.round(opwek).toLocaleString('nl-NL')} kWh/jr), ${ev?`auto (${Math.round(evKwh).toLocaleString('nl-NL')} kWh/jr laadvraag), `:''}saldering ${sal?'actief':'vervallen'}, congestie ${cong?'ja':'nee'}. Leverancierstarieven: allecijfers.nl april 2026. Dynamische dag/nacht-spreads zijn schattingen op basis van EPEX NL historisch. Controleer altijd de actuele tarieven op de website van de leverancier.
+  </div>
+</div>`;
+
+  g('adv-content').innerHTML=html;
+  g('adv-modal').classList.add('open');
+}
+
+function closeAdvisor(){ g('adv-modal').classList.remove('open'); }
+
+function applyBatSize(kwh){
+  g('sl-bat').value=kwh;
+  setBat('custom');
+  update();
 }
 
 buildDropdown();
