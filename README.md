@@ -6,7 +6,7 @@ hieronder staat hoe je deze moet gebruiken.
 
 # Energie Calculator - README
 
-Gemaakt voor: iedereen die nadenkt over een Tesla 18650 thuisbatterij, zonnepanelen, en/of een elektrische auto op een dynamisch stroomcontract.
+Gemaakt voor: iedereen die nadenkt over een thuisbatterij, zonnepanelen, en/of een elektrische auto op een dynamisch/vast stroomcontract.
 
 ---
 
