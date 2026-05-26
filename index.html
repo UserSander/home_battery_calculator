@@ -1201,67 +1201,79 @@ function applyBatSize(kwh){
 }
 
 // ─── EPEX LIVE PRIJZEN ─────────────────────────────────────────────────────────
+// euenergy.live - free CORS-native API sourced from ENTSO-E, no proxy needed
+// Token is minted on first call and stored in localStorage-equivalent (module var)
 let epexData = null;
 let epexLastFetch = 0;
+let euToken = null;
+
+async function getEuToken(){
+  if(euToken) return euToken;
+  try {
+    const res = await fetch('https://euenergy.live/api/v1/keys?email=energycalc-nl@noreply.local&label=energie_calc', {
+      method:'POST', signal: AbortSignal.timeout(6000)
+    });
+    if(!res.ok) throw new Error('token fail');
+    const data = await res.json();
+    euToken = data.key || data.token || data.api_key;
+    return euToken;
+  } catch {
+    return null;
+  }
+}
 
 async function fetchEPEX(){
-  // Use free Entso-E transparency platform day-ahead NL prices via a CORS-friendly proxy
-  // Fallback: use entsoe-eu API via allorigins proxy
   try {
     const now = Date.now();
-    if(epexData && now - epexLastFetch < 30 * 60 * 1000) return; // cache 30 min
+    if(epexData && now - epexLastFetch < 30 * 60 * 1000) return;
 
     const dot = g('epex-dot'), status = g('epex-status'), prices = g('epex-prices'), timeEl = g('epex-time');
     dot.className = 'epex-dot';
     status.textContent = 'EPEX NL tarieven ophalen...';
 
-    // Fetch via allorigins from energy-charts.info (free, no API key needed)
+    const token = await getEuToken();
+    if(!token) throw new Error('geen token');
+
+    // Fetch today's NL prices - pure CORS-native, no proxy
+    const res = await fetch('https://euenergy.live/api/v1/prices/today?zone=NL', {
+      headers:{ 'Authorization': `Bearer ${token}` },
+      signal: AbortSignal.timeout(8000)
+    });
+    if(!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+
+    // data is array of { period_start, price_per_mwh }
+    if(!Array.isArray(data) || !data.length) throw new Error('leeg');
+
     const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-    const url = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.energy-charts.info/price?bzn=NL&start=${dateStr}&end=${dateStr}`)}`;
-
-    const res = await fetch(url, {signal: AbortSignal.timeout(8000)});
-    const wrapper = await res.json();
-    const data = JSON.parse(wrapper.contents);
-
-    if(!data || !data.price || !data.price.length) throw new Error('geen data');
-
-    // data.price is array of EUR/MWh values, data.unix_seconds timestamps
-    const pricesEUR = data.price; // EUR/MWh excl belasting+btw
-    const ts = data.unix_seconds;
     const hourNow = today.getHours();
 
-    // Convert to all-in NL: kale beursprijs/1000 + EB(€0.1108) + leverancieropslag(~€0.02) + btw(21%)
-    const toAllin = mwh => ((mwh / 1000) + 0.1108 + 0.02) * 1.21;
+    // EUR/MWh → all-in NL kWh: kale prijs/1000 + EB €0.1108 + leverancieropslag ~€0.018 + btw 21%
+    const toAllin = mwh => Math.max(((mwh / 1000) + 0.1108 + 0.018) * 1.21, 0);
 
-    // Current, peak avg (17-21), night avg (01-06)
-    const curIdx = ts.findIndex(t => {
-      const h = new Date(t * 1000).getHours();
-      return h === hourNow;
-    });
-    const curRaw = curIdx >= 0 ? pricesEUR[curIdx] : pricesEUR[hourNow] || pricesEUR[0];
-    const curAllin = toAllin(curRaw);
+    const curEntry = data.find(d => new Date(d.period_start).getHours() === hourNow) || data[Math.min(hourNow, data.length-1)];
+    const curAllin = toAllin(curEntry.price_per_mwh);
 
-    const peakIdxs = ts.map((t,i)=>({h:new Date(t*1000).getHours(),i})).filter(x=>x.h>=17&&x.h<=21).map(x=>x.i);
-    const nightIdxs = ts.map((t,i)=>({h:new Date(t*1000).getHours(),i})).filter(x=>x.h>=1&&x.h<=6).map(x=>x.i);
-    const peakAvg = peakIdxs.length ? peakIdxs.reduce((s,i)=>s+pricesEUR[i],0)/peakIdxs.length : curRaw;
-    const nightAvg = nightIdxs.length ? nightIdxs.reduce((s,i)=>s+pricesEUR[i],0)/nightIdxs.length : curRaw*0.6;
+    const peakEntries = data.filter(d => { const h=new Date(d.period_start).getHours(); return h>=17&&h<=21; });
+    const nightEntries = data.filter(d => { const h=new Date(d.period_start).getHours(); return h>=1&&h<=6; });
+    const peakAvg = peakEntries.length ? peakEntries.reduce((s,d)=>s+d.price_per_mwh,0)/peakEntries.length : curEntry.price_per_mwh;
+    const nightAvg = nightEntries.length ? nightEntries.reduce((s,d)=>s+d.price_per_mwh,0)/nightEntries.length : curEntry.price_per_mwh * 0.55;
 
-    epexData = { cur: curAllin, peak: toAllin(peakAvg), night: toAllin(nightAvg), raw: curRaw };
+    epexData = { cur: curAllin, peak: toAllin(peakAvg), night: toAllin(nightAvg), raw: curEntry.price_per_mwh };
     epexLastFetch = now;
 
-    // Update sliders if on dynamic contract
     const peakF = Math.round(epexData.peak * 100) / 100;
     const nightF = Math.round(epexData.night * 100) / 100;
+    const isNeg = curAllin < 0.05;
 
     dot.className = 'epex-dot live';
     status.textContent = 'EPEX NL live';
-    prices.innerHTML = `<span class="epex-price">Nu: <strong>${curAllin>=0?'€'+curAllin.toFixed(2):'<span style="color:var(--red)">€'+curAllin.toFixed(2)+' (neg.)</span>'}</strong>/kWh</span>
-      <span class="epex-price">Dagpiek gem: <strong>€${peakF.toFixed(2)}</strong>/kWh</span>
-      <span class="epex-price">Nacht gem: <strong>€${nightF.toFixed(2)}</strong>/kWh</span>`;
+    prices.innerHTML = `
+      <span class="epex-price">Nu: <strong style="${isNeg?'color:var(--red)':''}">\u20AC${curAllin.toFixed(2)}/kWh${isNeg?' (negatief)':''}</strong></span>
+      <span class="epex-price">Dagpiek gem: <strong>\u20AC${peakF.toFixed(2)}/kWh</strong></span>
+      <span class="epex-price">Nacht gem: <strong>\u20AC${nightF.toFixed(2)}/kWh</strong></span>`;
     timeEl.textContent = today.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
 
-    // Auto-apply to sliders if dynamic contract active
     if(contractType === 'dyn'){
       g('sl-piek').value = Math.min(Math.max(peakF, 0.05), 0.60);
       g('sl-nacht').value = Math.min(Math.max(nightF, 0.05), 0.30);
@@ -1271,14 +1283,15 @@ async function fetchEPEX(){
 
   } catch(err) {
     const dot = g('epex-dot'), status = g('epex-status');
-    dot.className = 'epex-dot err';
+    dot.className = 'epex-dot stale';
     status.textContent = 'EPEX live niet beschikbaar \u2014 handmatige tarieven actief';
-    g('epex-prices').innerHTML = '';
+    g('epex-prices').innerHTML = `<span style="font-size:10px;color:var(--text3)">${err.message||'timeout'}</span>`;
     g('epex-time').textContent = '';
+    // retry after 5 min instead of 30
+    setTimeout(fetchEPEX, 5 * 60 * 1000);
   }
 }
 
-// Fetch on load and every 30 minutes
 fetchEPEX();
 setInterval(fetchEPEX, 30 * 60 * 1000);
 
