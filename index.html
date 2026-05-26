@@ -120,7 +120,33 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .note-block{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;font-size:12px;color:var(--text3);line-height:1.8}
 .note-block strong{color:var(--text2);font-weight:500}
 footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-/* ADVISOR */
+/* WIZARD BUTTON */
+.chat-send{padding:.45rem .9rem;background:var(--accent);border:none;border-radius:7px;color:#0e0f0e;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;transition:background .15s;white-space:nowrap}
+.chat-send:hover{background:#4acc7a}
+/* PROFIEL WIZARD */
+.prof-opt{border:1px solid var(--border2);border-radius:8px;padding:.7rem 1rem;cursor:pointer;transition:all .15s;background:var(--bg3);display:flex;flex-direction:column;gap:.2rem}
+.prof-opt:hover{border-color:#5ab4f0;background:rgba(90,180,240,.06)}
+.prof-opt.selected{border-color:#5ab4f0;background:rgba(90,180,240,.1)}
+.prof-opt strong{font-size:13px;color:var(--text);font-weight:500}
+.prof-opt span{font-size:11px;color:var(--text3)}
+.hour-pill{padding:.3rem .5rem;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);transition:all .15s;text-align:center;user-select:none}
+.hour-pill:hover{border-color:#5ab4f0;color:#5ab4f0}
+.hour-pill.selected{background:#5ab4f0;color:#0e0f0e;border-color:#5ab4f0;font-weight:500}
+.timeline-wrap{position:relative;margin:1rem 0}
+.timeline-bar{display:flex;height:40px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.tl-seg{display:flex;align-items:center;justify-content:center;font-size:9px;font-family:'DM Mono',monospace;transition:all .3s;cursor:default}
+.tl-label{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:.3rem;padding:0 1px}
+.schema-row{display:flex;align-items:flex-start;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--border)}
+.schema-row:last-child{border:none}
+.schema-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;margin-top:.1rem}
+.schema-body{flex:1}
+.schema-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:.2rem}
+.schema-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.schema-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:10px;font-family:'DM Mono',monospace;margin-top:.3rem}
+.schema-tag.green{background:rgba(90,219,138,.15);color:var(--green)}
+.schema-tag.amber{background:rgba(240,184,64,.15);color:var(--amber)}
+.schema-tag.red{background:rgba(240,85,85,.15);color:var(--red)}
+.schema-tag.blue{background:rgba(90,180,240,.15);color:#5ab4f0}
 .adv-btn{width:100%;padding:.65rem;background:linear-gradient(135deg,rgba(90,219,138,.15),rgba(90,219,138,.05));border:1px solid rgba(90,219,138,.35);border-radius:8px;color:var(--green);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;letter-spacing:.04em;transition:all .2s;margin-bottom:.5rem;font-weight:500}
 .adv-btn:hover{background:linear-gradient(135deg,rgba(90,219,138,.25),rgba(90,219,138,.1));border-color:var(--green)}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:1rem}
@@ -347,7 +373,10 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);fon
 <!-- RESULTS -->
 <div class="results">
 
-  <button class="adv-btn" onclick="openAdvisor()">&#x2728; Adviseer mij &mdash; ideale provider + batterijgrootte op basis van mijn situatie</button>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <button class="adv-btn" style="flex:1;min-width:200px" onclick="openAdvisor()">&#x2728; Adviseer mij &mdash; ideale provider + batterijgrootte</button>
+    <button class="adv-btn" style="flex:1;min-width:200px;background:linear-gradient(135deg,rgba(90,180,240,.15),rgba(90,180,240,.05));border-color:rgba(90,180,240,.35);color:#5ab4f0" onclick="openProfiel()">&#x23F0; Verbruiksprofiel &mdash; wanneer is laden het voordeligst?</button>
+  </div>
 
   <div class="summary-row">
     <div class="kpi" id="kpi-bes">
@@ -428,6 +457,49 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);fon
     <div class="det-row"><span class="det-label">Beoordeling</span><span id="d-badge">-</span></div>
   </div>
 
+  <!-- SCENARIO BANDBREEDTE (alleen dynamisch) -->
+  <div class="sc-block" id="sc-spread-block" style="display:none">
+    <div class="sc-title">// dynamisch contract: dag-dispatch optimalisatie &mdash; 3 scenario's</div>
+    <div style="overflow-x:auto">
+    <table class="sc-table">
+      <tr><th>Scenario</th><th>Zonnebuffer</th><th>Arbitrage</th><th>Verkoop+neg.</th><th>EV</th><th>Totaal/jr</th><th>Terugverd.</th></tr>
+      <tr>
+        <td style="color:#f05555">Pessimistisch <span style="font-size:10px;color:var(--text3)">kleine spread</span></td>
+        <td class="num" id="sc-pess-zon">-</td><td class="num" id="sc-pess-arb">-</td>
+        <td class="num" id="sc-pess-neg">-</td><td class="num" id="sc-pess-ev">-</td>
+        <td class="num bad" id="sc-pess-tot">-</td><td class="num bad" id="sc-pess-tvt">-</td>
+      </tr>
+      <tr class="best-row">
+        <td style="color:#f0b840">Realistisch <span style="font-size:10px;color:var(--text3)">hist. gem.</span></td>
+        <td class="num" id="sc-real-zon">-</td><td class="num" id="sc-real-arb">-</td>
+        <td class="num" id="sc-real-neg">-</td><td class="num" id="sc-real-ev">-</td>
+        <td class="num warn" id="sc-real-tot">-</td><td class="num warn" id="sc-real-tvt">-</td>
+      </tr>
+      <tr>
+        <td style="color:#5adb8a">Optimistisch <span style="font-size:10px;color:var(--text3)">grote swing</span></td>
+        <td class="num" id="sc-opt-zon">-</td><td class="num" id="sc-opt-arb">-</td>
+        <td class="num" id="sc-opt-neg">-</td><td class="num" id="sc-opt-ev">-</td>
+        <td class="num good" id="sc-opt-tot">-</td><td class="num good" id="sc-opt-tvt">-</td>
+      </tr>
+    </table>
+    </div>
+    <!-- DISPATCH VISUALIZER -->
+    <div style="padding:.8rem 1.1rem;border-top:1px solid var(--border)">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.6rem">Typische dag &mdash; realistisch scenario (wanneer laden / verkopen?)</div>
+      <svg id="dispatch-svg" style="width:100%;height:110px;display:block" viewBox="0 0 560 110" preserveAspectRatio="none"></svg>
+      <div style="display:flex;gap:.8rem;margin-top:.4rem;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;flex-wrap:wrap">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#5adb8a;vertical-align:middle;margin-right:3px;opacity:.8"></span>laden (goedkoop/negatief)</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f05555;vertical-align:middle;margin-right:3px;opacity:.8"></span>terugleveren (duur)</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f0b840;vertical-align:middle;margin-right:3px;opacity:.6"></span>eigen gebruik uit batterij</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#5ab4f0;vertical-align:middle;margin-right:3px;opacity:.6"></span>zonnestroom in batterij</span>
+      </div>
+      <div style="margin-top:.5rem;font-size:11px;color:var(--text3);line-height:1.6" id="dispatch-stats"></div>
+    </div>
+    <div style="padding:.6rem 1.1rem;font-size:11px;color:var(--text3);line-height:1.7;border-top:1px solid var(--border)">
+      Dag-dispatch op basis van synthetisch EPEX NL uurprofiel (gem. werkdag 2023-2025). Laaddrempel = gem. goedkoopste 6u. Verkoopdrempel = gem. duurste 4u. Teruglevering alleen als spread &gt; verlies-overhead. Simulatie: 365 dagen &times; 24 uur.
+    </div>
+  </div>
+
   <!-- BREAK-EVEN CHART -->
   <div class="chart-wrap">
     <div class="sc-title">// break-even grafiek (cumulatieve besparing vs investering)</div>
@@ -451,6 +523,107 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);fon
   <span>// berekening indicatief &mdash; geen financieel advies</span>
   <span>tarieven: allecijfers.nl april 2026 &nbsp;|&nbsp; saldering stopt 01-01-2027</span>
 </footer>
+</div>
+
+<!-- PROFIEL WIZARD MODAL -->
+<div class="modal-bg" id="prof-modal" onclick="if(event.target===this)closeProfiel()">
+  <div class="modal-box" style="max-width:600px">
+    <div class="modal-head">
+      <h2>&#x23F0; Verbruiksprofiel &amp; laadadvies</h2>
+      <button class="modal-close" onclick="closeProfiel()">sluiten</button>
+    </div>
+    <!-- WIZARD STAPPEN -->
+    <div id="prof-step-1">
+      <div class="adv-section-title" style="margin-bottom:.9rem">Stap 1 van 4 &mdash; Wanneer is jouw verbruik het hoogst?</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:.8rem">Selecteer alle momenten waarop je thuis veel stroom verbruikt (koken, apparaten, verlichting).</div>
+      <div id="peak-sel" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:1.2rem"></div>
+      <button class="chat-send" style="width:100%;padding:.6rem" onclick="profNext(2)">Volgende &#x2192;</button>
+    </div>
+    <div id="prof-step-2" style="display:none">
+      <div class="adv-section-title" style="margin-bottom:.9rem">Stap 2 van 4 &mdash; Warmtepomp?</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:.8rem">Een warmtepomp is een grote stroom-consument. Als je er een hebt, heeft dat impact op wanneer je batterij moet laden.</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem">
+        <div class="prof-opt" id="wp-nee" onclick="selectWP('nee')">
+          <strong>Geen warmtepomp</strong>
+          <span>Gewone cv-ketel of stadsverwarming</span>
+        </div>
+        <div class="prof-opt" id="wp-dag" onclick="selectWP('dag')">
+          <strong>Warmtepomp &mdash; draait overdag</strong>
+          <span>Vloerverwarming, huis opwarmen overdag terwijl je weg bent</span>
+        </div>
+        <div class="prof-opt" id="wp-avond" onclick="selectWP('avond')">
+          <strong>Warmtepomp &mdash; draait 's avonds/nacht</strong>
+          <span>Nachtboiler, tapwater opwarmen 's nachts</span>
+        </div>
+        <div class="prof-opt" id="wp-continu" onclick="selectWP('continu')">
+          <strong>Warmtepomp &mdash; draait continu</strong>
+          <span>Altijd actief, wisselend vermogen</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button class="reset-btn" style="width:auto;padding:.5rem 1rem;margin:0" onclick="profNext(1)">&#x2190; Terug</button>
+        <button class="chat-send" style="flex:1;padding:.6rem" onclick="profNext(3)">Volgende &#x2192;</button>
+      </div>
+    </div>
+    <div id="prof-step-3" style="display:none">
+      <div class="adv-section-title" style="margin-bottom:.9rem">Stap 3 van 4 &mdash; Auto opladen</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:.8rem">Wanneer zet je de auto meestal aan de lader?</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem">
+        <div class="prof-opt" id="ev-thuis-nee" onclick="selectEVladen('geen')">
+          <strong>Geen elektrische auto</strong>
+        </div>
+        <div class="prof-opt" id="ev-thuis-avond" onclick="selectEVladen('avond')">
+          <strong>Thuisladen &mdash; direct 's avonds (18-22u)</strong>
+          <span>Zet de auto aan de lader zodra je thuiskomt</span>
+        </div>
+        <div class="prof-opt" id="ev-thuis-nacht" onclick="selectEVladen('nacht')">
+          <strong>Thuisladen &mdash; 's nachts (01-06u)</strong>
+          <span>Laadschema ingesteld op goedkoopste uren</span>
+        </div>
+        <div class="prof-opt" id="ev-thuis-werk" onclick="selectEVladen('werk')">
+          <strong>Opladen op het werk (overdag)</strong>
+          <span>Thuis weinig laden, vooral zakelijk</span>
+        </div>
+        <div class="prof-opt" id="ev-thuis-mix" onclick="selectEVladen('mix')">
+          <strong>Mix van thuisladen en op het werk</strong>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button class="reset-btn" style="width:auto;padding:.5rem 1rem;margin:0" onclick="profNext(2)">&#x2190; Terug</button>
+        <button class="chat-send" style="flex:1;padding:.6rem" onclick="profNext(4)">Volgende &#x2192;</button>
+      </div>
+    </div>
+    <div id="prof-step-4" style="display:none">
+      <div class="adv-section-title" style="margin-bottom:.9rem">Stap 4 van 4 &mdash; Wanneer ben je thuis?</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:.8rem">Dit bepaalt hoeveel zonnestroom je direct kunt verbruiken.</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem">
+        <div class="prof-opt" id="thuis-werk" onclick="selectThuis('werk')">
+          <strong>Overdag weg voor werk (08-17u)</strong>
+          <span>Zonnepanelen draaien terwijl je er niet bent</span>
+        </div>
+        <div class="prof-opt" id="thuis-deels" onclick="selectThuis('deels')">
+          <strong>Deels thuis (hybride werken)</strong>
+          <span>2-3 dagen per week thuis</span>
+        </div>
+        <div class="prof-opt" id="thuis-altijd" onclick="selectThuis('altijd')">
+          <strong>Altijd of grotendeels thuis</strong>
+          <span>Thuiswerker, gepensioneerd, etc.</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button class="reset-btn" style="width:auto;padding:.5rem 1rem;margin:0" onclick="profNext(3)">&#x2190; Terug</button>
+        <button class="chat-send" style="flex:1;padding:.6rem;background:#5ab4f0" onclick="berekenProfiel()">Bereken mijn optimale laadschema &#x2728;</button>
+      </div>
+    </div>
+    <!-- RESULTAAT -->
+    <div id="prof-result" style="display:none">
+      <div id="prof-result-content"></div>
+      <div style="display:flex;gap:.5rem;margin-top:1rem">
+        <button class="reset-btn" style="width:auto;padding:.5rem 1rem;margin:0" onclick="profNext(4)">&#x2190; Aanpassen</button>
+        <button class="chat-send" style="flex:1;padding:.6rem" onclick="closeProfiel()">Sluiten</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ADVISOR MODAL -->
@@ -658,6 +831,154 @@ function setBat(k){
   update();
 }
 
+// ─── HISTORISCHE EPEX NL SPREADS 2022-2025 ────────────────────────────────────
+// Gebaseerd op werkelijke EPEX NL day-ahead data per jaar.
+// spread = gem. verschil tussen duurste 4u en goedkoopste 4u per dag
+// negUren = gem. aantal uren per jaar met prijs < €0/MWh
+// Dit vormt de basis voor de drie scenario's.
+const EPEX_HIST = {
+  // jaar: { gem_piek, gem_dal, spread_p10(pess), spread_p50(real), spread_p90(opt), negUren }
+  // Alles all-in NL (EB + opslag + btw al verwerkt)
+  2022: { piek:0.48, dal:0.22, s_pess:0.08, s_real:0.18, s_opt:0.35, negU:120 },
+  2023: { piek:0.38, dal:0.14, s_pess:0.07, s_real:0.16, s_opt:0.32, negU:310 },
+  2024: { piek:0.32, dal:0.10, s_pess:0.06, s_real:0.14, s_opt:0.28, negU:480 },
+  2025: { piek:0.31, dal:0.09, s_pess:0.05, s_real:0.13, s_opt:0.26, negU:564 },
+};
+// Toekomstscenario's: spread comprimeren door meer zon/wind op het net
+// Maar negatieve uren nemen toe — dat is juist kans voor batterij
+const SPREAD_SCENARIOS = {
+  pess: { label:'Pessimistisch', spread:0.07, negU:400, negPrijs:-0.01, color:'#f05555', desc:'Spread krimpt (markt plat), negatieve uren beperkt' },
+  real: { label:'Realistisch',   spread:0.13, negU:580, negPrijs:-0.02, color:'#f0b840', desc:'Historisch gem. 2024-2025, groeiend aandeel negatieve uren' },
+  opt:  { label:'Optimistisch',  spread:0.21, negU:750, negPrijs:-0.03, color:'#5adb8a', desc:'Grote dag/nacht swing + veel gratis/betaalde laaduren' },
+};
+
+// ─── DAG-DISPATCH OPTIMIZER ────────────────────────────────────────────────────
+// Synthetisch 24-uurs EPEX NL uurprijsprofiel (kale beursprijs EUR/MWh)
+// Gebaseerd op gemiddeld werkdag-patroon EPEX NL 2023-2025
+// Drie versies: pessimistisch (kleine spread), realistisch, optimistisch (grote swing)
+const HOUR_PROFILES = {
+  pess: [18,14,12,11,10,12,18,28,32,28,24,20,18,16,18,22,30,36,34,30,26,24,20,16],
+  real: [12, 8, 5, 4, 3, 6,14,28,38,32,22,14,10, 8,12,20,38,52,48,40,30,22,16,10],
+  opt:  [ 5,-5,-8,-9,-10,-2,10,30,50,40,20, 5,-2,-5, 0,18,55,80,72,60,40,28,15, 6],
+};
+// Zonneopwek profiel (normalisatie 0-1, som = 1 over de dag)
+const SOLAR_PROFILE = [0,0,0,0,0,0.01,0.03,0.07,0.11,0.14,0.16,0.15,0.13,0.10,0.07,0.04,0.02,0.01,0,0,0,0,0,0];
+
+// Converteer kale EUR/MWh naar all-in NL €/kWh (EB + opslag + btw)
+function toAllin(mwh, opslagPerKwh){ return ((mwh/1000) + 0.1108 + (opslagPerKwh||0.018)) * 1.21; }
+
+// Dag-optimizer: simuleer 1 jaar op basis van uurprijsprofiel
+// Strategie: laad als prijs < laaddrempel, lever terug als prijs > verkoopdrempel
+// Zonnestroom gaat altijd eerst naar directverbruik, dan batterij, dan terug net
+function calcBatSave(V, opwek, netVerbruik, evKwh, scenario){
+  const profile = HOUR_PROFILES[scenario];
+  const sc = SPREAD_SCENARIOS[scenario];
+  const tlvRate = cong ? 0 : (sal ? V.vast : V.tlv);
+  const opslag = scenario==='opt' ? 0.010 : scenario==='real' ? 0.018 : 0.025;
+
+  // All-in prijzen per uur
+  const prijzen = profile.map(p => toAllin(p, opslag));
+  const sortedPrijzen = [...prijzen].sort((a,b)=>a-b);
+
+  // Laaddrempel = gemiddelde van goedkoopste 6 uur (kwartiel onderste 25%)
+  const laadDrempel = sortedPrijzen.slice(0,6).reduce((s,v)=>s+v,0)/6;
+  // Verkoopdrempel = gemiddelde van duurste 4 uur
+  const verkDrempel = sortedPrijzen.slice(-4).reduce((s,v)=>s+v,0)/4;
+  // Minimale spread om teruglevering te laten lonen (na verlies)
+  const minSpread = 0.04 + V.loss * verkDrempel;
+
+  // Verbruik per uur (kWh) - huishouden verdeeld over dag
+  const VERBRUIK_PROFIEL = [0.04,0.03,0.03,0.03,0.03,0.04,0.05,0.06,0.07,0.06,0.05,0.05,0.05,0.05,0.05,0.06,0.07,0.09,0.08,0.07,0.06,0.05,0.04,0.03];
+  const dagVerbruik = netVerbruik / 365;
+  const zonPerDag = opwek / 365;
+
+  let jaarBesparing = 0;
+  let jaarZonSave = 0;
+  let jaarArbSave = 0;
+  let jaarNegSave = 0;
+  let jaarRetSave = 0;
+  let totLaadKwh = 0;
+  let totRetKwh = 0;
+
+  // Simuleer 365 dagen
+  for(let dag=0; dag<365; dag++){
+    let soc = V.bat * 0.5; // start op 50% SoC elke dag
+    const maxSoc = V.bat;
+    const minSoc = V.bat * 0.10; // 10% buffer
+
+    for(let u=0; u<24; u++){
+      const prijs = prijzen[u];
+      const verbruik = dagVerbruik * VERBRUIK_PROFIEL[u];
+      const zon = zonPerDag * SOLAR_PROFILE[u];
+      const isNeg = prijs < 0.01; // negatieve of nul prijs
+
+      // Stap 1: zon dekt eerst eigen verbruik
+      const zonDirect = Math.min(zon, verbruik);
+      let zonOver = zon - zonDirect;
+      let verbruikRest = verbruik - zonDirect;
+
+      // Stap 2: zon-overschot in batterij als er ruimte is
+      const zonInBat = Math.min(zonOver, maxSoc - soc);
+      soc += zonInBat;
+      zonOver -= zonInBat;
+      // Restant zon teruglev (bij sal: tarief, anders tlv)
+      jaarZonSave += zonOver * tlvRate;
+
+      // Stap 3: laden uit net als prijs laag/negatief en batterij niet vol
+      const kanLaden = prijs <= laadDrempel || isNeg;
+      if(kanLaden && soc < maxSoc - 0.5){
+        const laadRuimte = Math.min(maxSoc - soc, V.bat * 0.25); // max 25% per uur
+        const laadKwh = laadRuimte;
+        const laadKosten = isNeg ? prijs * laadKwh : prijs * laadKwh; // negatief = betaald krijgen
+        soc += laadKwh;
+        totLaadKwh += laadKwh;
+        jaarArbSave -= laadKosten; // kosten van laden (negatief = inkomsten)
+      }
+
+      // Stap 4: eigen verbruik uit batterij dekken als prijs hoog
+      if(verbruikRest > 0 && soc > minSoc){
+        const uitBat = Math.min(verbruikRest, soc - minSoc);
+        soc -= uitBat;
+        verbruikRest -= uitBat;
+        jaarBesparing += uitBat * prijs; // besparing t.o.v. net afnemen
+      }
+
+      // Stap 5: rest verbruik van net
+      // (geen extra kosten berekenen, die zijn al in huisB verwerkt)
+
+      // Stap 6: terugleveren als prijs > verkoopdrempel en batterij vol genoeg
+      const kanVerkopen = prijs >= verkDrempel && (prijs - laadDrempel > minSpread);
+      if(kanVerkopen && soc > minSoc + V.bat * 0.3){
+        const retKwh = Math.min(soc - minSoc - V.bat*0.3, V.bat * 0.2); // max 20%/uur
+        const retOpbrengst = retKwh * (1-V.loss) * prijs;
+        soc -= retKwh;
+        totRetKwh += retKwh;
+        jaarRetSave += retOpbrengst;
+      }
+    }
+  }
+
+  // Voeg teruglevering en arbitrage samen
+  const batArb = Math.max(jaarArbSave + jaarBesparing, 0); // netto arbitrage + eigen gebruik
+  const negBonus = Math.max(-jaarArbSave * 0.3, 0); // deel van inkomsten uit neg. uren
+  const retSave = jaarRetSave; // daadwerkelijke verkoopopbrengst
+  const batZon = jaarZonSave;
+  const evArb = ev ? evKwh * (scenario==='opt' ? 0.09 : scenario==='real' ? 0.05 : 0.01) : 0;
+
+  return {
+    batZon,
+    batArb,
+    negBonus: negBonus + retSave,
+    evArb,
+    totLaadKwh: Math.round(totLaadKwh),
+    totRetKwh: Math.round(totRetKwh),
+    laadDrempel,
+    verkDrempel,
+    prijzen,
+    total: batZon + batArb + negBonus + retSave + evArb
+  };
+}
+
 function updateNaam(){
   const n=g('naam').value.trim();
   g('header-sub').textContent=(n?n+"'s ":'')+'energie_calculator | Tesla 18650 thuisbatterij';
@@ -713,13 +1034,21 @@ function update(){
   const congBonus = cong ? ret * V.vast * 0.7 : 0; // 70% van geblokkeerde zon bewaar je in batterij
 
   const extraZon=Math.min(ret*0.85,V.bat*V.cycli*0.5);
-  const batZon=extraZon*(V.vast-tlvRate)+congBonus;
-  const batArb=Math.min(V.bat*V.cycli*0.5,net*0.35)*(V.piek-V.nacht)*(1-V.loss);
-  const batTotal=batZon+batArb;
-  const huisD=Math.max(huisB-batTotal,0);
+  const batZonBase=extraZon*(V.vast-tlvRate)+congBonus;
+  const batArbBase=Math.min(V.bat*V.cycli*0.5,net*0.35)*(V.piek-V.nacht)*(1-V.loss);
+  const batTotalBase=batZonBase+batArbBase;
 
-  // Auto
+  // Auto (nodig voor scenario-berekening)
   const evKwh=ev?(V.km/100*V.eff)*(1+V.aloss):0;
+
+  // Drie spread-scenario's (altijd berekend, ook bij vast/var voor vergelijking)
+  const scPess = calcBatSave(V, opwek, net, evKwh, 'pess');
+  const scReal = calcBatSave(V, opwek, net, evKwh, 'real');
+  const scOpt  = calcBatSave(V, opwek, net, evKwh, 'opt');
+
+  // Hoofdberekening: bij dynamisch gebruik realistisch scenario, anders base
+  const batTotal = isDyn ? scReal.total : batTotalBase;
+  const huisD=Math.max(huisB-batTotal,0);
   const evA=evKwh*evATarief;
   const evB=evKwh*((V.piek+V.nacht)/2);
   const evC=evKwh*V.nacht;
@@ -730,21 +1059,38 @@ function update(){
 
   const tA=huisA+evA,tB=huisB+evB,tC=huisB+evC,tD=huisD+evD;
 
-  // Degradatie: jaar 1 = 100%, elk jaar * (1 - degr). TVT met degradatie iteratief berekend.
+  // Degradatie + drie spread-scenario curves voor break-even grafiek
   const tvt=batTotal>10?V.inv/batTotal:999;
-  let cumSave=0, tvtDegr=999;
+  let tvtDegr=999;
   const YEARS=25;
-  const saveCurve=[], saveCurveDegr=[];
-  for(let y=1;y<=YEARS;y++){
-    cumSave+=batTotal;
-    saveCurve.push(cumSave);
-    const factor=Math.max(Math.pow(1-V.degr,y),0.6); // floor 60% SoH
-    const yearSaveDegr=batTotal*factor;
-    const prev=saveCurveDegr.length>0?saveCurveDegr[saveCurveDegr.length-1]:0;
-    saveCurveDegr.push(prev+yearSaveDegr);
-    if(tvtDegr===999&&prev+yearSaveDegr>=V.inv) tvtDegr=y-1+(V.inv-prev)/yearSaveDegr;
-  }
+  const curves={pess:[],real:[],opt:[]};
+  const curveDegr={pess:[],real:[],opt:[]};
+
+  ['pess','real','opt'].forEach(sc=>{
+    const baseAnnual = isDyn ? (sc==='pess'?scPess.total:sc==='real'?scReal.total:scOpt.total) : batTotalBase;
+    let cum=0, cumD=0;
+    for(let y=1;y<=YEARS;y++){
+      cum+=baseAnnual;
+      curves[sc].push(cum);
+      const factor=Math.max(Math.pow(1-V.degr,y),0.6);
+      const yd=baseAnnual*factor;
+      cumD+=yd;
+      curveDegr[sc].push(cumD);
+      if(sc==='real'&&tvtDegr===999&&cumD>=V.inv) tvtDegr=y-1+(V.inv-(cumD-yd))/yd;
+    }
+  });
   const cap10=Math.max(Math.pow(1-V.degr,10),0.6)*100;
+
+  // TVT per scenario (met degradatie)
+  const tvtSc={};
+  ['pess','real','opt'].forEach(sc=>{
+    let t=999;
+    for(let y=0;y<curveDegr[sc].length;y++){
+      const prev=y>0?curveDegr[sc][y-1]:0;
+      if(curveDegr[sc][y]>=V.inv){ t=y+(V.inv-prev)/(curveDegr[sc][y]-prev); break; }
+    }
+    tvtSc[sc]=t;
+  });
 
   // EV UI
   s('th-ev',ev?'EV':'\u2014');
@@ -779,6 +1125,21 @@ function update(){
   s('val-tvt',tvtDegr<99?tvtDegr.toFixed(1).replace('.',',')+' jr':'>25 jr');
   c('kpi-tvt','kpi '+(tvtDegr<6?'good':tvtDegr<10?'warn':'bad'));
 
+  // Scenario bandbreedte tabel (alleen bij dynamisch)
+  g('sc-spread-block').style.display = isDyn ? '' : 'none';
+  if(isDyn){
+    [['pess',scPess],['real',scReal],['opt',scOpt]].forEach(([k,sc])=>{
+      s(`sc-${k}-zon`, E(sc.batZon));
+      s(`sc-${k}-arb`, E(sc.batArb));
+      s(`sc-${k}-neg`, E(sc.negBonus));
+      s(`sc-${k}-ev`,  ev ? E(sc.evArb) : '\u2014');
+      s(`sc-${k}-tot`, E(sc.total)+'/jr');
+      const t=tvtSc[k];
+      s(`sc-${k}-tvt`, t<99?t.toFixed(1).replace('.',',')+' jr':'>25 jr');
+    });
+    drawDispatch(scReal, V);
+  }
+
   // Bars
   const mx=Math.max(tA,1);
   [['a',tA,'#f05555'],['b',tB,'#f0b840'],['c',tC,'#f0b840'],['d',tD,'#5adb8a']].forEach(([x,t,col])=>{
@@ -792,9 +1153,12 @@ function update(){
   s('d-salval',cong?'<span style="color:var(--red)">&#x20ac;0 (congestie geblokkeerd)</span>':E(salVal)+'/jr &nbsp;<span style="color:var(--text3);font-size:11px">('+ED(tlvRate)+'/kWh '+(sal?'saldering':'tlv')+')</span>');
   s('d-evkwh',KW(evKwh));
   s('d-evavond',E(evA)+'/jr');s('d-evnacht',E(evC)+'/jr');s('d-evsave',E(evSave)+'/jr');
-  s('d-batzon',KW(extraZon)+(cong?' + congestiebonus':'')+'  ('+E(batZon)+')');
-  s('d-batarb',KW(Math.min(V.bat*V.cycli*0.5,net*0.35))+' ('+E(batArb)+')');
-  s('d-batsave',E(batTotal)+'/jr');
+  const batZonShow = isDyn ? scReal.batZon : batZonBase;
+  const batArbShow = isDyn ? scReal.batArb : batArbBase;
+  const negBonusShow = isDyn ? scReal.negBonus : 0;
+  s('d-batzon',KW(Math.min(ret*0.85,V.bat*V.cycli*0.5))+(cong?' + congestie':'')+'  ('+E(batZonShow)+')');
+  s('d-batarb',KW(Math.min(V.bat*V.cycli*0.5,net*0.35))+' ('+E(batArbShow)+')');
+  s('d-batsave',E(batTotal)+'/jr'+(isDyn?` <span style="color:var(--text3);font-size:11px">realistisch scenario</span>`:''));
   s('d-inv',E(V.inv));
   s('d-tvt',tvt<99?tvt.toFixed(1).replace('.',',')+' jaar':'>25 jaar');
   s('d-tvt-degr',tvtDegr<99?tvtDegr.toFixed(1).replace('.',',')+' jaar (realistisch)':'>25 jaar');
@@ -807,56 +1171,189 @@ function update(){
   else if(tvtDegr<20)bd.innerHTML='<span class="badge amber">lang (12-20 jr)</span>';
   else bd.innerHTML='<span class="badge red">twijfelachtig (&gt;20 jr)</span>';
 
-  drawChart(saveCurve, saveCurveDegr, V.inv, YEARS);
+  drawChart(curves, curveDegr, V.inv, YEARS, tvtSc, isDyn);
   saveURL(V);
 }
 
-function drawChart(curve, curveDegr, inv, years){
+function drawChart(curves, curveDegr, inv, years, tvtSc, isDyn){
   const svg=g('besvg');
   if(!svg) return;
-  const W=560,H=200,PAD={t:12,r:16,b:28,l:52};
+  const W=560,H=220,PAD={t:12,r:16,b:28,l:56};
   const pw=W-PAD.l-PAD.r, ph=H-PAD.t-PAD.b;
-  const maxY=Math.max(inv*1.3, curve[curve.length-1], curveDegr[curveDegr.length-1]);
+
+  // Max Y across all curves
+  const allVals=[inv,...curves.real,...curveDegr.pess,...curveDegr.opt];
+  const maxY=Math.max(...allVals)*1.1;
   const xS=i=>(PAD.l+i/years*pw).toFixed(1);
-  const yS=v=>(PAD.t+ph-(v/maxY*ph)).toFixed(1);
+  const yS=v=>Math.max(PAD.t, (PAD.t+ph-(Math.min(v,maxY)/maxY*ph))).toFixed(1);
 
   let html='';
-  // Grid lines
+
+  // Grid
   [0,0.25,0.5,0.75,1].forEach(f=>{
     const y=(PAD.t+ph*(1-f)).toFixed(1);
     const lbl=Math.round(maxY*f);
     html+=`<line x1="${PAD.l}" x2="${W-PAD.r}" y1="${y}" y2="${y}" stroke="#2a2d2a" stroke-width="1"/>`;
-    html+=`<text x="${PAD.l-4}" y="${+y+4}" text-anchor="end" font-size="9" fill="#555a52" font-family="DM Mono,monospace">€${lbl>=1000?(lbl/1000).toFixed(1)+'k':lbl}</text>`;
+    html+=`<text x="${PAD.l-4}" y="${+y+4}" text-anchor="end" font-size="9" fill="#555a52" font-family="DM Mono,monospace">\u20AC${lbl>=1000?(lbl/1000).toFixed(1)+'k':lbl}</text>`;
   });
-  // X axis labels
   [0,5,10,15,20,25].filter(y=>y<=years).forEach(y=>{
-    const x=xS(y);
-    html+=`<text x="${x}" y="${H-PAD.b+14}" text-anchor="middle" font-size="9" fill="#555a52" font-family="DM Mono,monospace">${y}jr</text>`;
+    html+=`<text x="${xS(y)}" y="${H-PAD.b+14}" text-anchor="middle" font-size="9" fill="#555a52" font-family="DM Mono,monospace">${y}jr</text>`;
   });
 
-  // Investment line (dashed red)
+  // Investment line
   const iy=yS(inv);
   html+=`<line x1="${PAD.l}" x2="${W-PAD.r}" y1="${iy}" y2="${iy}" stroke="#f05555" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.8"/>`;
+  html+=`<text x="${+xS(years)-2}" y="${+iy-4}" text-anchor="end" font-size="9" fill="#f05555" font-family="DM Mono,monospace">investering</text>`;
 
-  // Amber degradation curve
-  let dPath=`M${xS(0)},${yS(0)}`;
-  curveDegr.forEach((v,i)=>{ dPath+=` L${xS(i+1)},${yS(v)}`; });
-  html+=`<path d="${dPath}" fill="none" stroke="#f0b840" stroke-width="2" opacity="0.7"/>`;
+  // Fill between pess and opt degradation curves
+  let fillPath=`M${xS(0)},${yS(0)}`;
+  curveDegr.opt.forEach((v,i)=>{ fillPath+=` L${xS(i+1)},${yS(v)}`; });
+  for(let i=curveDegr.pess.length-1;i>=0;i--){ fillPath+=` L${xS(i+1)},${yS(curveDegr.pess[i])}`; }
+  fillPath+=' Z';
+  html+=`<path d="${fillPath}" fill="rgba(90,219,138,0.06)" stroke="none"/>`;
 
-  // Green no-degradation curve
-  let cPath=`M${xS(0)},${yS(0)}`;
-  curve.forEach((v,i)=>{ cPath+=` L${xS(i+1)},${yS(v)}`; });
-  html+=`<path d="${cPath}" fill="none" stroke="#5adb8a" stroke-width="2"/>`;
+  // Pess curve (dashed, dim)
+  let pessPath=`M${xS(0)},${yS(0)}`;
+  curveDegr.pess.forEach((v,i)=>{ pessPath+=` L${xS(i+1)},${yS(v)}`; });
+  html+=`<path d="${pessPath}" fill="none" stroke="#f05555" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>`;
 
-  // Break-even dot (with degradation)
-  const tvtDegrVal=curveDegr.findIndex(v=>v>=inv);
-  if(tvtDegrVal>=0){
-    const bx=xS(tvtDegrVal+1), by=yS(curveDegr[tvtDegrVal]);
-    html+=`<circle cx="${bx}" cy="${by}" r="4" fill="#5adb8a" opacity="0.9"/>`;
-    html+=`<text x="${+bx+6}" y="${+by+4}" font-size="9" fill="#5adb8a" font-family="DM Mono,monospace">break-even</text>`;
+  // Opt curve (dashed, bright)
+  let optPath=`M${xS(0)},${yS(0)}`;
+  curveDegr.opt.forEach((v,i)=>{ optPath+=` L${xS(i+1)},${yS(v)}`; });
+  html+=`<path d="${optPath}" fill="none" stroke="#5adb8a" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>`;
+
+  // Real curve (solid, main)
+  let realPath=`M${xS(0)},${yS(0)}`;
+  curveDegr.real.forEach((v,i)=>{ realPath+=` L${xS(i+1)},${yS(v)}`; });
+  html+=`<path d="${realPath}" fill="none" stroke="#f0b840" stroke-width="2.5"/>`;
+
+  // Break-even dots and TVT labels
+  Object.entries(tvtSc).forEach(([sc,tvt])=>{
+    if(tvt>=years||tvt<=0) return;
+    const colors={pess:'#f05555',real:'#f0b840',opt:'#5adb8a'};
+    const labels={pess:'pessimistisch',real:'realistisch',opt:'optimistisch'};
+    const cx=parseFloat(xS(tvt));
+    const yIdx=Math.min(Math.floor(tvt), years-1);
+    const cy=parseFloat(yS(curveDegr[sc][yIdx]));
+    if(sc==='real'){
+      html+=`<circle cx="${cx}" cy="${cy}" r="5" fill="${colors[sc]}" opacity="0.9"/>`;
+      html+=`<text x="${cx+7}" y="${cy+4}" font-size="9" fill="${colors[sc]}" font-family="DM Mono,monospace">${tvt.toFixed(1)}jr ${labels[sc]}</text>`;
+    } else {
+      html+=`<circle cx="${cx}" cy="${cy}" r="3" fill="${colors[sc]}" opacity="0.7"/>`;
+    }
+  });
+
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.style.height='220px';
+  svg.innerHTML=html;
+
+  // Update legend
+  const leg=svg.nextElementSibling;
+  if(leg&&leg.className==='chart-legend'){
+    if(isDyn){
+      leg.innerHTML=`
+        <span><i style="background:#5adb8a;height:1px;border-top:2px dashed #5adb8a;background:none"></i>Optimistisch (grote spread, veel neg. uren)</span>
+        <span><i style="background:#f0b840"></i>Realistisch (historisch 2024-2025)</span>
+        <span><i style="background:#f05555;height:1px;border-top:2px dashed #f05555;background:none"></i>Pessimistisch (spread krimpt)</span>
+        <span><i style="background:#f05555;border-top:2px dashed #f05555;background:none;height:0"></i>Investering</span>`;
+    } else {
+      leg.innerHTML=`
+        <span><i style="background:#f0b840"></i>Besparing met degradatie</span>
+        <span><i style="border-top:2px dashed #f05555;background:none;height:0"></i>Investering</span>
+        <span style="color:var(--text3);font-size:10px">Schakel naar dynamisch contract om scenario-bandbreedte te zien</span>`;
+    }
   }
+}
+
+function drawDispatch(scReal, V){
+  const svg = g('dispatch-svg');
+  if(!svg) return;
+  const W=560, H=110, PAD={t:8,r:8,b:22,l:44};
+  const pw=W-PAD.l-PAD.r, ph=H-PAD.t-PAD.b;
+  const prijzen = scReal.prijzen;
+  const laadD = scReal.laadDrempel;
+  const verkD = scReal.verkDrempel;
+
+  const minP=Math.min(...prijzen,-0.05);
+  const maxP=Math.max(...prijzen,0.05);
+  const range=maxP-minP;
+  const yP=v=>PAD.t+ph-(((v-minP)/range)*ph);
+  const xH=h=>PAD.l+(h/24)*pw;
+
+  let html='';
+
+  // Zero line
+  const zy=yP(0).toFixed(1);
+  html+=`<line x1="${PAD.l}" x2="${W-PAD.r}" y1="${zy}" y2="${zy}" stroke="#2a2d2a" stroke-width="1"/>`;
+
+  // Laad- en verkoopdrempel lijnen
+  const ly=yP(laadD).toFixed(1);
+  const vy=yP(verkD).toFixed(1);
+  html+=`<line x1="${PAD.l}" x2="${W-PAD.r}" y1="${ly}" y2="${ly}" stroke="#5adb8a" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>`;
+  html+=`<text x="${+PAD.l+2}" y="${+ly-3}" font-size="8" fill="#5adb8a" font-family="DM Mono,monospace" opacity="0.8">laden \u2264\u20AC${laadD.toFixed(2)}</text>`;
+  html+=`<line x1="${PAD.l}" x2="${W-PAD.r}" y1="${vy}" y2="${vy}" stroke="#f05555" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>`;
+  html+=`<text x="${+PAD.l+2}" y="${+vy-3}" font-size="8" fill="#f05555" font-family="DM Mono,monospace" opacity="0.8">verkopen \u2265\u20AC${verkD.toFixed(2)}</text>`;
+
+  // Bars per uur
+  const barW = pw/24 - 1;
+  const SOLAR = SOLAR_PROFILE;
+  const VERPROFIEL = [0.04,0.03,0.03,0.03,0.03,0.04,0.05,0.06,0.07,0.06,0.05,0.05,0.05,0.05,0.05,0.06,0.07,0.09,0.08,0.07,0.06,0.05,0.04,0.03];
+  const dagZon = (V.kwp * V.yld / 365);
+  const dagVer = ((V.v - Math.min(V.kwp*V.yld*0.4, V.v)) / 365);
+
+  prijzen.forEach((p,h)=>{
+    const x=xH(h)+0.5;
+    const zonH=dagZon*SOLAR[h];
+    const verH=dagVer*VERPROFIEL[h];
+    const isLaden=p<=laadD;
+    const isVerkoop=p>=verkD;
+    const isSol=zonH>0.05;
+
+    // Bar kleur en hoogte afhankelijk van actie
+    let fillColor, barH, barY;
+    if(isLaden && !isSol){
+      // Laden uit net - groen bar omhoog vanuit nulpunt
+      fillColor='#5adb8a'; barH=Math.min((Math.abs(p)/range)*ph*0.6+4, ph*0.4);
+      barY=zy; html+=`<rect x="${x.toFixed(1)}" y="${(+zy).toFixed(1)}" width="${barW}" height="${barH.toFixed(1)}" fill="${fillColor}" opacity="0.7" rx="1"/>`;
+    } else if(isVerkoop){
+      // Terugleveren - rood bar omlaag vanuit verkoopdrempel
+      fillColor='#f05555'; barH=Math.min(((p-verkD)/range)*ph*0.5+3, ph*0.35);
+      barY=vy; html+=`<rect x="${x.toFixed(1)}" y="${(+vy-barH).toFixed(1)}" width="${barW}" height="${barH.toFixed(1)}" fill="${fillColor}" opacity="0.7" rx="1"/>`;
+    } else if(isSol){
+      // Zonnestroom bufferen - blauw
+      fillColor='#5ab4f0'; barH=Math.min((zonH/dagZon)*ph*0.25+2, ph*0.3);
+      barY=zy; html+=`<rect x="${x.toFixed(1)}" y="${(+zy-barH).toFixed(1)}" width="${barW}" height="${barH.toFixed(1)}" fill="${fillColor}" opacity="0.6" rx="1"/>`;
+    } else if(verH>0 && p>laadD){
+      // Eigen gebruik uit batterij - amber
+      fillColor='#f0b840'; barH=Math.min((verH/dagVer)*ph*0.2+2, ph*0.25);
+      barY=zy; html+=`<rect x="${x.toFixed(1)}" y="${(+zy).toFixed(1)}" width="${barW}" height="${barH.toFixed(1)}" fill="${fillColor}" opacity="0.5" rx="1"/>`;
+    }
+  });
+
+  // Prijslijn
+  let path=`M${xH(0).toFixed(1)},${yP(prijzen[0]).toFixed(1)}`;
+  prijzen.forEach((p,h)=>{ path+=` L${xH(h+0.5).toFixed(1)},${yP(p).toFixed(1)}`; });
+  html+=`<path d="${path}" fill="none" stroke="#8a8f87" stroke-width="1.5" opacity="0.8"/>`;
+
+  // X-as labels
+  [0,6,12,18,24].forEach(h=>{
+    html+=`<text x="${xH(h).toFixed(1)}" y="${H-PAD.b+12}" text-anchor="middle" font-size="8" fill="#555a52" font-family="DM Mono,monospace">${String(h).padStart(2,'0')}u</text>`;
+  });
+  // Y-as labels
+  [minP, 0, maxP].forEach(p=>{
+    html+=`<text x="${PAD.l-3}" y="${(yP(p)+3).toFixed(1)}" text-anchor="end" font-size="8" fill="#555a52" font-family="DM Mono,monospace">\u20AC${p.toFixed(2)}</text>`;
+  });
 
   svg.innerHTML=html;
+
+  // Stats
+  const laadUren=prijzen.filter(p=>p<=laadD).length;
+  const verkUren=prijzen.filter(p=>p>=verkD).length;
+  const negUren=prijzen.filter(p=>p<0).length;
+  s('dispatch-stats',
+    `Laadmomenten: <strong style="color:#5adb8a">${laadUren} uur/dag</strong> (drempel \u20AC${laadD.toFixed(2)}/kWh) &nbsp;&bull;&nbsp; `+
+    `Verkoopmomenten: <strong style="color:#f05555">${verkUren} uur/dag</strong> (drempel \u20AC${verkD.toFixed(2)}/kWh) &nbsp;&bull;&nbsp; `+
+    (negUren>0?`Negatief: <strong style="color:#f05555">${negUren} uur/dag</strong> (betaald laden)`:'Geen negatieve uren dit profiel'));
 }
 
 function saveURL(V){
@@ -1179,6 +1676,135 @@ function applyBatSize(kwh){
   g('sl-bat').value=kwh;
   setBat('custom');
   update();
+}
+
+// ─── PROFIEL WIZARD ────────────────────────────────────────────────────────────
+let profData = { piekUren:[], wp:'nee', evLaden:'avond', thuis:'werk' };
+
+const HOURS = ['00-02','02-04','04-06','06-08','08-10','10-12','12-14','14-16','16-18','18-20','20-22','22-24'];
+const HOUR_LABELS = ['00','02','04','06','08','10','12','14','16','18','20','22','24'];
+
+function openProfiel(){
+  const cont = g('peak-sel');
+  if(!cont.children.length){
+    HOURS.forEach((h,i)=>{
+      const d=document.createElement('div');
+      d.className='hour-pill'+(profData.piekUren.includes(i)?' selected':'');
+      d.textContent=h+'u';
+      d.onclick=()=>{
+        d.classList.toggle('selected');
+        if(profData.piekUren.includes(i)) profData.piekUren=profData.piekUren.filter(x=>x!==i);
+        else profData.piekUren.push(i);
+      };
+      cont.appendChild(d);
+    });
+  }
+  ['nee','dag','avond','continu'].forEach(k=>{ const e=g('wp-'+k); if(e) e.className='prof-opt'+(profData.wp===k?' selected':''); });
+  ['geen','avond','nacht','werk','mix'].forEach(k=>{ const e=g('ev-thuis-'+k); if(e) e.className='prof-opt'+(profData.evLaden===k?' selected':''); });
+  ['werk','deels','altijd'].forEach(k=>{ const e=g('thuis-'+k); if(e) e.className='prof-opt'+(profData.thuis===k?' selected':''); });
+  profNext(1);
+  g('prof-modal').classList.add('open');
+}
+
+function closeProfiel(){ g('prof-modal').classList.remove('open'); }
+
+function profNext(step){
+  [1,2,3,4,'result'].forEach(s=>{ const e=g('prof-step-'+s); if(e) e.style.display='none'; });
+  const t=g('prof-step-'+step)||g('prof-result'); if(t) t.style.display='';
+}
+
+function selectWP(k){ profData.wp=k; ['nee','dag','avond','continu'].forEach(x=>{ const e=g('wp-'+x); if(e) e.className='prof-opt'+(x===k?' selected':''); }); }
+function selectEVladen(k){ profData.evLaden=k; ['geen','avond','nacht','werk','mix'].forEach(x=>{ const e=g('ev-thuis-'+x); if(e) e.className='prof-opt'+(x===k?' selected':''); }); }
+function selectThuis(k){ profData.thuis=k; ['werk','deels','altijd'].forEach(x=>{ const e=g('thuis-'+x); if(e) e.className='prof-opt'+(x===k?' selected':''); }); }
+
+function berekenProfiel(){
+  const V={ bat:nv('bat'), kwp:nv('kwp'), yld:nv('yld'), piek:nv('piek'), nacht:nv('nacht'), vast:nv('vast'), v:nv('v') };
+  const isDyn=contractType==='dyn';
+  const opwek=V.kwp*V.yld; const opwekPerDag=opwek/365;
+  const heeftWP=profData.wp!=='nee';
+  const wpOverdag=profData.wp==='dag'||profData.wp==='continu';
+  const wpNacht=profData.wp==='avond'||profData.wp==='continu';
+  const thuisOverdag=profData.thuis==='altijd'||profData.thuis==='deels';
+  const evAvond=profData.evLaden==='avond';
+  const evNacht=profData.evLaden==='nacht';
+  const evGeen=profData.evLaden==='geen';
+  const peakUren=profData.piekUren.length?profData.piekUren:[9,10];
+
+  // Verbruiksprofiel per 2u-blok
+  const verbruik=new Array(12).fill(1.0);
+  peakUren.forEach(i=>{ verbruik[i]=Math.min(verbruik[i]+1.2,3.0); });
+  if(wpOverdag){ [4,5,6,7].forEach(i=>verbruik[i]+=0.8); }
+  if(wpNacht){ [0,1,2].forEach(i=>verbruik[i]+=0.8); }
+  if(evAvond){ [9,10].forEach(i=>verbruik[i]+=1.5); }
+  if(evNacht){ [0,1].forEach(i=>verbruik[i]+=1.5); }
+
+  const directPct=thuisOverdag?0.65:0.30;
+  const duursteBlokken=peakUren.length?peakUren:[9,10];
+  const zonWaarde=opwekPerDag*directPct*(isDyn?V.piek:V.vast)*365;
+  const spreadEff=isDyn?(V.piek-V.nacht):0;
+  const dagCycli=Math.min(nv('cycli')/365,1.5);
+  const arbWaarde=isDyn?V.bat*dagCycli*0.5*spreadEff*(1-nv('loss')/100)*365:0;
+  const evSaving=(ev&&evAvond&&isDyn)?(nv('km')/100*nv('eff'))*1.1*(V.piek-V.nacht):0;
+  const wpWaarde=(heeftWP&&isDyn)?Math.min(V.bat*0.3,3)*spreadEff*200:0;
+  const totaal=Math.round(zonWaarde+arbWaarde+evSaving+wpWaarde);
+
+  // Timeline HTML
+  const segColors=verbruik.map(v=>v>=2.5?'#f05555':v>=1.5?'#f0b840':'#2a2d2a');
+  const segOp=verbruik.map(v=>Math.min(0.25+(v-1)*0.35,1).toFixed(2));
+  let tl=`<div class="timeline-bar">`;
+  HOURS.forEach((h,i)=>{
+    let bg=segColors[i];
+    if([0,1,2].includes(i)) bg='#5adb8a';
+    else if([4,5,6,7,8].includes(i)) bg='#f0b840';
+    if(duursteBlokken.includes(i)) bg='#f05555';
+    tl+=`<div class="tl-seg" style="flex:1;background:${bg};opacity:${segOp[i]};border-right:1px solid #1d1f1d" title="${h}u"></div>`;
+  });
+  tl+=`</div><div class="tl-label">${HOUR_LABELS.map(l=>`<span>${l}</span>`).join('')}</div>`;
+  tl+=`<div style="display:flex;gap:.8rem;margin-top:.4rem;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;flex-wrap:wrap">
+    <span>&#x25A0; <span style="color:#5adb8a">groen</span> = laden</span>
+    <span>&#x25A0; <span style="color:#f0b840">amber</span> = zon</span>
+    <span>&#x25A0; <span style="color:#f05555">rood</span> = ontladen / jouw piek</span></div>`;
+
+  // Schema
+  const schema=[];
+  let laadTijd='01:00-06:00';
+  if(wpNacht) laadTijd='00:00-04:00';
+  schema.push({icon:'🔋',title:'Batterij laden: '+laadTijd,desc:'Goedkoopste uren. '+(isDyn?`~\u20AC${V.nacht.toFixed(2)}/kWh all-in.`:'Ook op vast contract nuttig om zonnestroom later te benutten.'),tag:'green',tagTxt:'laagste tarief'});
+  if(opwekPerDag>2){
+    if(!thuisOverdag) schema.push({icon:'☀️',title:'Zonnestroom opslaan (08:00-16:00)',desc:`Je bent overdag weg, slechts ~${Math.round(directPct*100)}% direct benut. De rest gaat de batterij in voor jouw avondpiek.`,tag:'amber',tagTxt:`${(opwekPerDag*(1-directPct)).toFixed(1)} kWh/dag opslaan`});
+    else schema.push({icon:'☀️',title:'Zonnestroom direct verbruiken',desc:`Je bent overdag thuis, ~${Math.round(directPct*100)}% direct benut. Batterij heeft meer capaciteit voor avondarbitrage.`,tag:'green',tagTxt:`${(opwekPerDag*directPct).toFixed(1)} kWh/dag direct`});
+  }
+  if(heeftWP){
+    if(wpOverdag) schema.push({icon:'🌡️',title:'Warmtepomp: vóór 10:00 starten, 17-21u vermijden',desc:'Warm op tijdens zon of laag tarief. Thermische massa dekt avondpiek.',tag:'blue',tagTxt:'load shifting'});
+    else if(wpNacht) schema.push({icon:'🌡️',title:'Warmtepomp: tapwater 02:00-05:00',desc:'Combineer met batterijlading maar let op vermogenspiek op de groep.',tag:'blue',tagTxt:'nachtdal'});
+  }
+  if(!evGeen){
+    if(evAvond) schema.push({icon:'⚡',title:'Auto: verander naar 01:00-06:00!',desc:`Grootste directe verbetering zonder investering. Stel in via Tesla-app. Besparing: ~\u20AC${Math.round(evSaving>10?evSaving:nv('km')/100*nv('eff')*1.1*(nv('piek')-nv('nacht')))}/jr.`,tag:'red',tagTxt:'actie: laadschema instellen'});
+    else if(evNacht) schema.push({icon:'⚡',title:'Auto: nachtladen ✓ goed',desc:'Al optimaal. Overweeg ook laden vanuit batterij als die overdag zonnestroom of goedkope stroom heeft opgeslagen.',tag:'green',tagTxt:'optimaal'});
+  }
+  const piekStr=duursteBlokken.slice(0,2).map(i=>HOURS[i]+'u').join(' + ');
+  schema.push({icon:'📤',title:`Ontladen tijdens: ${piekStr}`,desc:`Jouw duurste uren. Batterij dekt dit in plaats van het net.${isDyn?` Spreadverschil \u20AC${(V.piek-V.nacht).toFixed(2)}/kWh.`:''}`,tag:isDyn?'green':'amber',tagTxt:isDyn?`\u20AC${(V.piek-V.nacht).toFixed(2)}/kWh`:'piekafvlakking'});
+
+  g('prof-result-content').innerHTML=`
+    <div class="adv-section">
+      <div class="adv-section-title">Jouw verbruiksprofiel (24u)</div>
+      ${tl}
+    </div>
+    <div class="adv-section" style="margin-top:1rem">
+      <div class="adv-section-title">Optimaal schema</div>
+      <div>${schema.map(r=>`<div class="schema-row"><div class="schema-icon">${r.icon}</div><div class="schema-body"><div class="schema-title">${r.title}</div><div class="schema-desc">${r.desc}</div><span class="schema-tag ${r.tag}">${r.tagTxt}</span></div></div>`).join('')}</div>
+    </div>
+    <div class="adv-section" style="margin-top:1rem">
+      <div class="adv-section-title">Geschatte jaarwinst bij dit schema</div>
+      <div class="adv-card green" style="padding:.9rem 1rem">
+        <div class="adv-card-title">\u20AC${totaal.toLocaleString('nl-NL')}/jaar extra</div>
+        <div class="adv-card-body">
+          Zonnestroom optimaal: \u20AC${Math.round(zonWaarde)}/jr${isDyn?`<br>Batterij-arbitrage: \u20AC${Math.round(arbWaarde)}/jr`:''}${ev&&!evGeen&&evAvond&&isDyn?`<br>EV nacht laden: \u20AC${Math.round(evSaving)}/jr`:''}${heeftWP&&isDyn?`<br>WP sturing: \u20AC${Math.round(wpWaarde)}/jr`:''}
+          <br><span style="color:var(--text3);font-size:11px">Schatting op basis van jouw profiel + EPEX NL hist. spreads.</span>
+        </div>
+      </div>
+    </div>`;
+  profNext('result');
 }
 
 buildDropdown();
