@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energie Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0f0e;--bg2:#161817;--bg3:#1d1f1d;--border:#2a2d2a;--border2:#353835;--text:#e8ebe6;--text2:#8a8f87;--text3:#555a52;--green:#5adb8a;--amber:#f0b840;--red:#f05555;--accent:#5adb8a}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+a{color:var(--green);text-decoration:none}a:hover{text-decoration:underline}
+.shell{max-width:980px;margin:0 auto;padding:2rem 1.2rem 4rem}
+header{margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:1.2rem;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem}
+.name-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem}
+.mono-prefix{font-family:'DM Mono',monospace;font-size:20px;color:var(--text3)}
+.name-edit{background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--accent);font-family:'DM Mono',monospace;font-size:20px;font-weight:500;outline:none;width:210px;padding:0 2px;letter-spacing:-.02em}
+.name-edit:focus{border-bottom-color:var(--accent)}
+.name-edit::placeholder{color:var(--text3)}
+header p{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.share-bar{display:flex;gap:.5rem;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:.35rem;padding:.38rem .8rem;border-radius:6px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);transition:all .15s;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent);text-decoration:none}
+.btn.primary{background:var(--accent);color:#0e0f0e;border-color:var(--accent);font-weight:500}
+.btn.primary:hover{background:#4acc7a}
+.toggle-group{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.8rem}
+.pill{padding:.3rem .85rem;border-radius:20px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);transition:all .15s;user-select:none}
+.pill:hover{color:var(--text2);border-color:var(--border)}
+.pill.active{background:var(--accent);color:#0e0f0e;border-color:var(--accent);font-weight:500}
+.bat-presets{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:.9rem}
+.bat-card{border:1px solid var(--border2);border-radius:8px;padding:.6rem .8rem;cursor:pointer;transition:all .15s;background:var(--bg3)}
+.bat-card:hover{border-color:var(--border)}
+.bat-card.active{border-color:var(--accent);background:rgba(90,219,138,.07)}
+.bat-name{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:.1rem}
+.bat-card.active .bat-name{color:var(--accent)}
+.bat-spec{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1.6}
+.bat-card.wide{grid-column:1/-1}
+.layout{display:grid;grid-template-columns:310px 1fr;gap:1.2rem;align-items:start}
+@media(max-width:720px){.layout{grid-template-columns:1fr}}
+.inputs{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.2rem;position:sticky;top:1rem}
+@media(max-width:720px){.inputs{position:static}}
+.section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:.8rem;padding-bottom:.35rem;border-bottom:1px solid var(--border)}
+.field{margin-bottom:1rem}
+.field-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.3rem}
+.field-label{font-size:12px;color:var(--text2)}
+.field-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);font-weight:500;min-width:80px;text-align:right;cursor:text;border-bottom:1px solid transparent;transition:border-color .15s;user-select:none}
+.field-val:hover{border-bottom-color:var(--border2)}
+.num-input{font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);font-weight:500;background:transparent;border:none;border-bottom:1px solid var(--accent);outline:none;width:90px;text-align:right;padding:0 1px;display:none}
+.num-input.visible{display:inline-block}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:var(--border2);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;transition:transform .1s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:none;cursor:pointer}
+.divider{height:1px;background:var(--border);margin:1rem 0}
+.reset-btn{width:100%;margin-top:.4rem;padding:.45rem;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;transition:all .15s}
+.reset-btn:hover{color:var(--text2);border-color:var(--border)}
+.hidden{display:none!important}
+.sal-banner{background:rgba(240,184,64,.08);border:1px solid rgba(240,184,64,.2);border-radius:8px;padding:.55rem .85rem;font-size:11px;color:var(--amber);margin-bottom:.8rem;line-height:1.6;display:none}
+.results{display:flex;flex-direction:column;gap:1rem}
+.summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+@media(max-width:480px){.summary-row{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem;transition:all .3s}
+.kpi-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:.4rem;letter-spacing:.05em}
+.kpi-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;transition:color .3s}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:.2rem}
+.kpi.good{border-color:rgba(90,219,138,.25)}.kpi.good .kpi-val{color:var(--green)}
+.kpi.warn .kpi-val{color:var(--amber)}.kpi.bad .kpi-val{color:var(--red)}
+.sc-block{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.sc-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;padding:.8rem 1.1rem;border-bottom:1px solid var(--border)}
+.sc-table{width:100%;border-collapse:collapse}
+.sc-table th{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);padding:.45rem .8rem;text-align:left;border-bottom:1px solid var(--border);letter-spacing:.05em}
+.sc-table th:not(:first-child){text-align:right}
+.sc-table td{padding:.55rem .8rem;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border)}
+.sc-table tr:last-child td{border:none}
+.sc-table td:first-child{color:var(--text)}
+.num{font-family:'DM Mono',monospace;text-align:right}
+.num.good{color:var(--green)}.num.bad{color:var(--red)}.num.warn{color:var(--amber)}
+.best-row{background:rgba(90,219,138,.04)}
+.bars{padding:.9rem 1.1rem}
+.bar-item{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem}
+.bar-item:last-child{margin-bottom:0}
+.bar-name{font-size:12px;color:var(--text2);width:155px;flex-shrink:0}
+.bar-track{flex:1;height:20px;background:var(--bg3);border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:7px;font-family:'DM Mono',monospace;font-size:10px;color:#0e0f0e;font-weight:500;transition:width .5s cubic-bezier(.4,0,.2,1);white-space:nowrap;overflow:hidden}
+.det-block{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.det-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 1.1rem;border-bottom:1px solid var(--border);font-size:13px;gap:1rem}
+.det-row:last-child{border:none}
+.det-label{color:var(--text2)}
+.det-val{font-family:'DM Mono',monospace;color:var(--text);white-space:nowrap}
+.det-val.good{color:var(--green)}.det-val.bad{color:var(--red)}.det-val.warn{color:var(--amber)}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace}
+.badge.green{background:rgba(90,219,138,.15);color:var(--green)}
+.badge.amber{background:rgba(240,184,64,.15);color:var(--amber)}
+.badge.red{background:rgba(240,85,85,.15);color:var(--red)}
+.note-block{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;font-size:12px;color:var(--text3);line-height:1.8}
+.note-block strong{color:var(--text2);font-weight:500}
+footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+  <div>
+    <div class="name-row">
+      <span class="mono-prefix">// </span>
+      <input class="name-edit" id="naam" type="text" maxlength="36" placeholder="jouw naam" oninput="updateNaam()">
+    </div>
+    <p id="header-sub">energie_calculator &nbsp;|&nbsp; Tesla 18650 thuisbatterij</p>
+  </div>
+  <div class="share-bar">
+    <button class="btn" onclick="copyLink()">&#x1F517; kopieer link</button>
+    <button class="btn" onclick="shareWA()">WhatsApp</button>
+    <button class="btn" onclick="shareMail()">E-mail</button>
+    <a class="btn primary" href="#" id="dl-btn">&#x2B07; download</a>
+  </div>
+</header>
+
+<div class="layout">
+<div class="inputs">
+
+  <div class="section-label">Situatie</div>
+
+  <div class="field" style="margin-bottom:.7rem">
+    <div class="field-label" style="margin-bottom:.4rem">Elektrische auto?</div>
+    <div class="toggle-group">
+      <div class="pill active" id="pill-ev-j" onclick="setEV(1)">Ja</div>
+      <div class="pill" id="pill-ev-n" onclick="setEV(0)">Nee</div>
+    </div>
+  </div>
+
+  <div class="field" style="margin-bottom:.5rem">
+    <div class="field-label" style="margin-bottom:.4rem">Salderingsregeling</div>
+    <div class="toggle-group">
+      <div class="pill active" id="pill-sal-j" onclick="setSal(1)">Actief (tot 2027)</div>
+      <div class="pill" id="pill-sal-n" onclick="setSal(0)">Vervallen (na 2027)</div>
+    </div>
+  </div>
+  <div class="sal-banner" id="sal-banner">
+    Na 2027 telt teruglevering alleen nog tegen de terugleververgoeding (~&#x20ac;0,07/kWh) in plaats van het volledige stroomtarief. Dit verlaagt de waarde van zonnestroom die je niet zelf verbruikt aanzienlijk.
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Huishouden</div>
+
+  <div class="field">
+    <div class="field-row"><span class="field-label">Jaarverbruik huis</span><span class="field-val" id="lbl-v" onclick="editField('v')">5.000 kWh</span><input class="num-input" id="ni-v" type="number" min="1500" max="12000" step="100" onblur="commitField('v')" onkeydown="niKey(event,'v')"></div>
+    <input type="range" id="sl-v" min="1500" max="12000" step="100" value="5000" oninput="update()">
+  </div>
+  <div class="field">
+    <div class="field-row"><span class="field-label">Zonnepanelen capaciteit</span><span class="field-val" id="lbl-kwp" onclick="editField('kwp')">3,0 kWp</span><input class="num-input" id="ni-kwp" type="number" min="0.5" max="15" step="0.5" onblur="commitField('kwp')" onkeydown="niKey(event,'kwp')"></div>
+    <input type="range" id="sl-kwp" min="0.5" max="15" step="0.5" value="3" oninput="update()">
+  </div>
+  <div class="field">
+    <div class="field-row"><span class="field-label">Opbrengst per kWp (NL)</span><span class="field-val" id="lbl-yld" onclick="editField('yld')">900 kWh</span><input class="num-input" id="ni-yld" type="number" min="700" max="1100" step="10" onblur="commitField('yld')" onkeydown="niKey(event,'yld')"></div>
+    <input type="range" id="sl-yld" min="700" max="1100" step="10" value="900" oninput="update()">
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Tarieven</div>
+
+  <div class="field">
+    <div class="field-row"><span class="field-label">Vast tarief incl. btw + EB</span><span class="field-val" id="lbl-vast" onclick="editField('vast')">&#x20ac;0,27/kWh</span><input class="num-input" id="ni-vast" type="number" min="0.05" max="0.60" step="0.01" onblur="commitField('vast')" onkeydown="niKey(event,'vast')"></div>
+    <input type="range" id="sl-vast" min="0.15" max="0.45" step="0.01" value="0.27" oninput="update()">
+  </div>
+  <div class="field">
+    <div class="field-row"><span class="field-label">Dynamisch dagpiek (17-21u)</span><span class="field-val" id="lbl-piek" onclick="editField('piek')">&#x20ac;0,31/kWh</span><input class="num-input" id="ni-piek" type="number" min="0.05" max="0.80" step="0.01" onblur="commitField('piek')" onkeydown="niKey(event,'piek')"></div>
+    <input type="range" id="sl-piek" min="0.15" max="0.60" step="0.01" value="0.31" oninput="update()">
+  </div>
+  <div class="field">
+    <div class="field-row"><span class="field-label">Dynamisch nacht (01-06u)</span><span class="field-val" id="lbl-nacht" onclick="editField('nacht')">&#x20ac;0,18/kWh</span><input class="num-input" id="ni-nacht" type="number" min="0.01" max="0.40" step="0.01" onblur="commitField('nacht')" onkeydown="niKey(event,'nacht')"></div>
+    <input type="range" id="sl-nacht" min="0.05" max="0.30" step="0.01" value="0.18" oninput="update()">
+  </div>
+  <div class="field">
+    <div class="field-row"><span class="field-label">Terugleververgoeding</span><span class="field-val" id="lbl-tlv" onclick="editField('tlv')">&#x20ac;0,07/kWh</span><input class="num-input" id="ni-tlv" type="number" min="0.01" max="0.40" step="0.01" onblur="commitField('tlv')" onkeydown="niKey(event,'tlv')"></div>
+    <input type="range" id="sl-tlv" min="0.01" max="0.30" step="0.01" value="0.07" oninput="update()">
+  </div>
+
+  <div id="ev-sectie">
+    <div class="divider"></div>
+    <div class="section-label">Elektrische auto</div>
+    <div class="field">
+      <div class="field-row"><span class="field-label">Kilometers per jaar</span><span class="field-val" id="lbl-km" onclick="editField('km')">15.000 km</span><input class="num-input" id="ni-km" type="number" min="1000" max="100000" step="1000" onblur="commitField('km')" onkeydown="niKey(event,'km')"></div>
+      <input type="range" id="sl-km" min="1000" max="60000" step="1000" value="15000" oninput="update()">
+    </div>
+    <div class="field">
+      <div class="field-row"><span class="field-label">Verbruik (kWh/100km)</span><span class="field-val" id="lbl-eff" onclick="editField('eff')">22 kWh/100</span><input class="num-input" id="ni-eff" type="number" min="10" max="50" step="0.5" onblur="commitField('eff')" onkeydown="niKey(event,'eff')"></div>
+      <input type="range" id="sl-eff" min="14" max="35" step="0.5" value="22" oninput="update()">
+    </div>
+    <div class="field">
+      <div class="field-row"><span class="field-label">Laadverlies AC (thuis)</span><span class="field-val" id="lbl-aloss" onclick="editField('aloss')">10%</span><input class="num-input" id="ni-aloss" type="number" min="1" max="30" step="1" onblur="commitField('aloss')" onkeydown="niKey(event,'aloss')"></div>
+      <input type="range" id="sl-aloss" min="5" max="20" step="1" value="10" oninput="update()">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Thuisbatterij</div>
+
+  <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:.5rem">Selecteer systeem of pas handmatig aan:</div>
+  <div class="bat-presets">
+    <div class="bat-card active" id="bc-tesla" onclick="setBat('tesla')">
+      <div class="bat-name">Tesla 18650 DIY</div>
+      <div class="bat-spec">20 kWh &bull; &#x20ac;3.500<br>10% verlies &bull; 280 cycli</div>
+    </div>
+    <div class="bat-card" id="bc-pw3" onclick="setBat('pw3')">
+      <div class="bat-name">Tesla Powerwall 3</div>
+      <div class="bat-spec">13,5 kWh &bull; &#x20ac;9.500<br>7% verlies &bull; 365 cycli</div>
+    </div>
+    <div class="bat-card" id="bc-huawei" onclick="setBat('huawei')">
+      <div class="bat-name">Huawei LUNA2000</div>
+      <div class="bat-spec">15 kWh &bull; &#x20ac;5.800<br>8% verlies &bull; 330 cycli</div>
+    </div>
+    <div class="bat-card" id="bc-victron" onclick="setBat('victron')">
+      <div class="bat-name">Victron + Pylontech</div>
+      <div class="bat-spec">14,4 kWh &bull; &#x20ac;4.200<br>9% verlies &bull; 310 cycli</div>
+    </div>
+    <div class="bat-card wide" id="bc-custom" onclick="setBat('custom')">
+      <div class="bat-name">Aangepast</div>
+      <div class="bat-spec">Gebruik onderstaande sliders</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-row"><span class="field-label">Bruikbare capaciteit</span><span class="field-val" id="lbl-bat" onclick="editField('bat')">20 kWh</span><input class="num-input" id="ni-bat" type="number" min="1" max="200" step="0.5" onblur="commitField('bat',true)" onkeydown="niKey(event,'bat',true)"></div>
+    <input type="range" id="sl-bat" min="5" max="60" step="0.5" value="20" oninput="setBat('custom');update()">
+  </div>
+  <div class="field">
+    <div class="field-row"><span class="field-label">Investering totaal</span><span class="field-val" id="lbl-inv" onclick="editField('inv')">&#x20ac;3.500</span><input class="num-input" id="ni-inv" type="number" min="100" max="50000" step="100" onblur="commitField('inv',true)" onkeydown="niKey(event,'inv',true)"></div>
+    <input type="range" id="sl-inv" min="500" max="15000" step="100" value="3500" oninput="setBat('custom');update()">
+  </div>
+  <div class="field">
+    <div class="field-row"><span class="field-label">Round-trip verlies</span><span class="field-val" id="lbl-loss" onclick="editField('loss')">10%</span><input class="num-input" id="ni-loss" type="number" min="1" max="40" step="1" onblur="commitField('loss',true)" onkeydown="niKey(event,'loss',true)"></div>
+    <input type="range" id="sl-loss" min="5" max="25" step="1" value="10" oninput="setBat('custom');update()">
+  </div>
+  <div class="field">
+    <div class="field-row"><span class="field-label">Laadcycli per jaar</span><span class="field-val" id="lbl-cycli" onclick="editField('cycli')">280 cycli</span><input class="num-input" id="ni-cycli" type="number" min="10" max="1000" step="10" onblur="commitField('cycli',true)" onkeydown="niKey(event,'cycli',true)"></div>
+    <input type="range" id="sl-cycli" min="100" max="500" step="10" value="280" oninput="setBat('custom');update()">
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()">&#x21BA; reset alles</button>
+</div>
+
+<!-- RESULTS -->
+<div class="results">
+
+  <div class="summary-row">
+    <div class="kpi" id="kpi-bes">
+      <div class="kpi-label">// max besparing/jaar</div>
+      <div class="kpi-val" id="val-bes">-</div>
+      <div class="kpi-sub">vs slechtste scenario</div>
+    </div>
+    <div class="kpi" id="kpi-tvt">
+      <div class="kpi-label">// terugverdientijd</div>
+      <div class="kpi-val" id="val-tvt">-</div>
+      <div class="kpi-sub">batterijproject</div>
+    </div>
+    <div class="kpi" id="kpi-extra">
+      <div class="kpi-label" id="kpi-extra-lbl">// auto besparing/jaar</div>
+      <div class="kpi-val" id="val-extra">-</div>
+      <div class="kpi-sub" id="kpi-extra-sub">nacht vs avond laden</div>
+    </div>
+  </div>
+
+  <div class="sc-block">
+    <div class="sc-title">// scenario vergelijking per jaar</div>
+    <div style="overflow-x:auto">
+    <table class="sc-table">
+      <tr><th>Scenario</th><th>Huis</th><th id="th-ev">Model X</th><th>Totaal</th><th>Besparing</th></tr>
+      <tr>
+        <td>A &mdash; Vast tarief<span id="suf-a"></span></td>
+        <td class="num bad" id="a-h">-</td><td class="num bad" id="a-e">-</td>
+        <td class="num bad" id="a-t">-</td><td class="num" id="a-s">&mdash;</td>
+      </tr>
+      <tr>
+        <td>B &mdash; Dynamisch, geen sturing</td>
+        <td class="num warn" id="b-h">-</td><td class="num warn" id="b-e">-</td>
+        <td class="num warn" id="b-t">-</td><td class="num good" id="b-s">-</td>
+      </tr>
+      <tr id="row-c">
+        <td>C &mdash; Dynamisch + nacht laden</td>
+        <td class="num warn" id="c-h">-</td><td class="num good" id="c-e">-</td>
+        <td class="num warn" id="c-t">-</td><td class="num good" id="c-s">-</td>
+      </tr>
+      <tr class="best-row">
+        <td id="lbl-d">D &mdash; Dynamisch + batterij &#x2713;</td>
+        <td class="num good" id="d-h">-</td><td class="num good" id="d-e">-</td>
+        <td class="num good" id="d-t">-</td><td class="num good" id="d-s">-</td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="sc-block">
+    <div class="sc-title">// totaalkosten visualisatie</div>
+    <div class="bars">
+      <div class="bar-item"><span class="bar-name" id="bar-lbl-a">A: vast + avond</span><div class="bar-track"><div class="bar-fill" id="bar-a" style="background:#f05555;width:100%">-</div></div></div>
+      <div class="bar-item"><span class="bar-name">B: dynamisch passief</span><div class="bar-track"><div class="bar-fill" id="bar-b" style="background:#f0b840;width:85%">-</div></div></div>
+      <div class="bar-item" id="bar-row-c"><span class="bar-name">C: + nacht laden</span><div class="bar-track"><div class="bar-fill" id="bar-c" style="background:#f0b840;width:72%">-</div></div></div>
+      <div class="bar-item"><span class="bar-name">D: + batterij + nacht</span><div class="bar-track"><div class="bar-fill" id="bar-d" style="background:#5adb8a;width:57%">-</div></div></div>
+    </div>
+  </div>
+
+  <div class="det-block">
+    <div class="sc-title">// detail breakdown</div>
+    <div class="det-row"><span class="det-label">Zonne-opwek per jaar</span><span class="det-val" id="d-opwek">-</span></div>
+    <div class="det-row"><span class="det-label">Direct eigen zonneverbruik (~40%)</span><span class="det-val" id="d-direct">-</span></div>
+    <div class="det-row"><span class="det-label">Teruggeleverd aan net</span><span class="det-val" id="d-terug">-</span></div>
+    <div class="det-row"><span class="det-label">Saldering: waarde teruglevering</span><span class="det-val" id="d-salval">-</span></div>
+    <div class="det-row" id="dr-ev1"><span class="det-label">Auto: laadstroom per jaar</span><span class="det-val" id="d-evkwh">-</span></div>
+    <div class="det-row" id="dr-ev2"><span class="det-label">Auto: kosten avond laden (piek)</span><span class="det-val bad" id="d-evavond">-</span></div>
+    <div class="det-row" id="dr-ev3"><span class="det-label">Auto: kosten nacht laden</span><span class="det-val good" id="d-evnacht">-</span></div>
+    <div class="det-row" id="dr-ev4"><span class="det-label">Auto: besparing nacht vs avond</span><span class="det-val good" id="d-evsave">-</span></div>
+    <div class="det-row" style="border-top:1px solid var(--border2);padding-top:.5rem;margin-top:.2rem">
+      <span class="det-label">Batterij: extra zonnestroom benut</span><span class="det-val" id="d-batzon">-</span></div>
+    <div class="det-row"><span class="det-label">Batterij: arbitrage nacht-dag</span><span class="det-val" id="d-batarb">-</span></div>
+    <div class="det-row"><span class="det-label">Batterij: besparing per jaar</span><span class="det-val good" id="d-batsave">-</span></div>
+    <div class="det-row" style="border-top:1px solid var(--border2);padding-top:.5rem;margin-top:.2rem">
+      <span class="det-label">Investering</span><span class="det-val" id="d-inv">-</span></div>
+    <div class="det-row"><span class="det-label">Terugverdientijd</span><span class="det-val warn" id="d-tvt">-</span></div>
+    <div class="det-row"><span class="det-label">Beoordeling</span><span id="d-badge">-</span></div>
+  </div>
+
+  <div class="note-block">
+    <strong>Aannames:</strong> Direct zonneverbruik ~40% (werkend overdag). Batterij-arbitrage vereist slim laden via Home Assistant of Victron VRM met Nordpool-koppeling. Model X ondersteunt geen V2H. Netbeheerkosten (~&#x20ac;400-500/jr) zijn in alle scenario's gelijk en buiten beschouwing gelaten. Bij saldering actief telt teruglevering tegen het vaste tarief; bij vervallen alleen de terugleververgoeding.
+  </div>
+
+</div>
+</div>
+
+<footer>
+  <span>// berekening indicatief &mdash; geen financieel advies</span>
+  <span>EPEX NL spreads 2024-2025 &nbsp;|&nbsp; saldering stopt 01-01-2027</span>
+</footer>
+</div>
+
+<script>
+const DEF={v:5000,kwp:3,yld:900,vast:0.27,piek:0.31,nacht:0.18,tlv:0.07,km:15000,eff:22,aloss:10,bat:20,inv:3500,loss:10,cycli:280};
+const BATS={
+  tesla:{bat:20,inv:3500,loss:10,cycli:280},
+  pw3:{bat:13.5,inv:9500,loss:7,cycli:365},
+  huawei:{bat:15,inv:5800,loss:8,cycli:330},
+  victron:{bat:14.4,inv:4200,loss:9,cycli:310}
+};
+let ev=1,sal=1,bat='tesla';
+
+const g=id=>document.getElementById(id);
+const nv=id=>+g('sl-'+id).value;
+const s=(id,v)=>{const e=g(id);if(e)e.innerHTML=v;};
+const c=(id,v)=>{const e=g(id);if(e)e.className=v;};
+const E=v=>('\u20AC'+Math.round(v).toLocaleString('nl-NL'));
+const ED=v=>('\u20AC'+v.toFixed(2).replace('.',','));
+const KW=v=>(Math.round(v).toLocaleString('nl-NL')+' kWh');
+
+function setEV(v){
+  ev=v;
+  g('pill-ev-j').className='pill'+(v?' active':'');
+  g('pill-ev-n').className='pill'+(!v?' active':'');
+  g('ev-sectie').classList.toggle('hidden',!v);
+  update();
+}
+
+function setSal(v){
+  sal=v;
+  g('pill-sal-j').className='pill'+(v?' active':'');
+  g('pill-sal-n').className='pill'+(!v?' active':'');
+  g('sal-banner').style.display=v?'none':'block';
+  update();
+}
+
+function setBat(k){
+  bat=k;
+  ['tesla','pw3','huawei','victron','custom'].forEach(x=>{
+    const e=g('bc-'+x);if(e)e.className='bat-card'+(x==='custom'?'wide':'')+(x===k?' active':'');
+  });
+  g('bc-custom').className='bat-card wide'+(k==='custom'?' active':'');
+  if(k!=='custom'&&BATS[k]){
+    const p=BATS[k];
+    g('sl-bat').value=p.bat;g('sl-inv').value=p.inv;
+    g('sl-loss').value=p.loss;g('sl-cycli').value=p.cycli;
+  }
+  update();
+}
+
+function updateNaam(){
+  const n=g('naam').value.trim();
+  g('header-sub').textContent=(n?n+"'s ":'')+'energie_calculator | Tesla 18650 thuisbatterij';
+  document.title=(n?n+' | ':'')+'Energie Calculator';
+}
+
+function update(){
+  const V={
+    v:nv('v'),kwp:nv('kwp'),yld:nv('yld'),vast:nv('vast'),piek:nv('piek'),
+    nacht:nv('nacht'),tlv:nv('tlv'),km:nv('km'),eff:nv('eff'),aloss:nv('aloss')/100,
+    bat:nv('bat'),inv:nv('inv'),loss:nv('loss')/100,cycli:nv('cycli')
+  };
+
+  // Labels
+  s('lbl-v',V.v.toLocaleString('nl-NL')+' kWh');
+  s('lbl-kwp',V.kwp.toFixed(1).replace('.',',')+' kWp');
+  s('lbl-yld',V.yld+' kWh');
+  s('lbl-vast',ED(V.vast)+'/kWh');s('lbl-piek',ED(V.piek)+'/kWh');
+  s('lbl-nacht',ED(V.nacht)+'/kWh');s('lbl-tlv',ED(V.tlv)+'/kWh');
+  s('lbl-km',V.km.toLocaleString('nl-NL')+' km');
+  s('lbl-eff',V.eff.toFixed(1).replace('.',',')+' kWh/100km');
+  s('lbl-aloss',Math.round(V.aloss*100)+'%');
+  s('lbl-bat',V.bat+' kWh');
+  s('lbl-inv','\u20AC'+V.inv.toLocaleString('nl-NL'));
+  s('lbl-loss',Math.round(V.loss*100)+'%');
+  s('lbl-cycli',V.cycli+' cycli');
+
+  // Berekeningen huis
+  const opwek=V.kwp*V.yld;
+  const dir=Math.min(opwek*0.4,V.v);
+  const ret=opwek-dir;
+  const net=V.v-dir;
+  const tlvRate=sal?V.vast:V.tlv;
+  const salVal=ret*tlvRate;
+
+  const huisA=net*V.vast-salVal;
+  const dynGem=V.nacht*0.55+V.piek*0.45;
+  const huisB=net*dynGem*0.89-salVal;
+
+  const extraZon=Math.min(ret*0.85,V.bat*V.cycli*0.5);
+  const batZon=extraZon*(V.vast-tlvRate);
+  const batArb=Math.min(V.bat*V.cycli*0.5,net*0.35)*(V.piek-V.nacht)*(1-V.loss);
+  const batTotal=batZon+batArb;
+  const huisD=Math.max(huisB-batTotal,0);
+
+  // Auto
+  const evKwh=ev?(V.km/100*V.eff)*(1+V.aloss):0;
+  const evA=evKwh*V.piek, evB=evKwh*((V.piek+V.nacht)/2);
+  const evC=evKwh*V.nacht, evD=evC*0.97;
+
+  const tA=huisA+evA,tB=huisB+evB,tC=huisB+evC,tD=huisD+evD;
+
+  // EV UI
+  s('th-ev',ev?'Model X':'\u2014');
+  s('suf-a',ev?' + avond laden':'');
+  s('lbl-d','D \u2014 Dynamisch + batterij'+(ev?' + nacht \u2713':' \u2713'));
+  s('bar-lbl-a','A: vast'+(ev?' + avond':''));
+  g('row-c').style.display=ev?'':'none';
+  g('bar-row-c').style.display=ev?'':'none';
+  ['dr-ev1','dr-ev2','dr-ev3','dr-ev4'].forEach(id=>g(id).style.display=ev?'':'none');
+
+  // Tabel
+  s('a-h',E(huisA));s('a-e',ev?E(evA):'\u2014');s('a-t',E(tA));s('a-s','\u2014');
+  s('b-h',E(huisB));s('b-e',ev?E(evB):'\u2014');s('b-t',E(tB));s('b-s','+'+E(tA-tB));
+  s('c-h',E(huisB));s('c-e',ev?E(evC):'\u2014');s('c-t',E(tC));s('c-s','+'+E(tA-tC));
+  s('d-h',E(huisD));s('d-e',ev?E(evD):'\u2014');s('d-t',E(tD));s('d-s','+'+E(tA-tD));
+
+  // KPIs
+  const maxBes=tA-tD;
+  const evSave=ev?evA-evC:0;
+  s('val-bes',E(maxBes));
+  c('kpi-bes','kpi '+(maxBes>800?'good':maxBes>300?'warn':'bad'));
+
+  if(ev){
+    s('kpi-extra-lbl','// auto besparing/jaar');
+    s('val-extra',E(evSave));
+    s('kpi-extra-sub','nacht vs avond laden');
+    c('kpi-extra','kpi '+(evSave>400?'good':evSave>150?'warn':''));
+  } else {
+    s('kpi-extra-lbl','// eigen zonne benut');
+    s('val-extra',KW(dir));
+    s('kpi-extra-sub','direct zelfverbruik');
+    c('kpi-extra','kpi');
+  }
+
+  const tvt=batTotal>10?V.inv/batTotal:999;
+  s('val-tvt',tvt<99?tvt.toFixed(1).replace('.',',')+' jr':'>30 jr');
+  c('kpi-tvt','kpi '+(tvt<6?'good':tvt<10?'warn':'bad'));
+
+  // Bars
+  const mx=Math.max(tA,1);
+  [['a',tA,'#f05555'],['b',tB,'#f0b840'],['c',tC,'#f0b840'],['d',tD,'#5adb8a']].forEach(([x,t,col])=>{
+    const e=g('bar-'+x);
+    e.style.width=Math.max((t/mx)*100,3)+'%';
+    e.style.background=col;
+    e.textContent=E(t);
+  });
+
+  // Detail
+  s('d-opwek',KW(opwek));s('d-direct',KW(dir));s('d-terug',KW(ret));
+  s('d-salval',E(salVal)+'/jr &nbsp;<span style="color:var(--text3);font-size:11px">('+ED(tlvRate)+'/kWh '+(sal?'saldering':'tlv')+')</span>');
+  s('d-evkwh',KW(evKwh));
+  s('d-evavond',E(evA)+'/jr');s('d-evnacht',E(evC)+'/jr');s('d-evsave',E(evSave)+'/jr');
+  s('d-batzon',KW(extraZon)+' ('+E(batZon)+')');
+  s('d-batarb',KW(Math.min(V.bat*V.cycli*0.5,net*0.35))+' ('+E(batArb)+')');
+  s('d-batsave',E(batTotal)+'/jr');
+  s('d-inv',E(V.inv));
+  s('d-tvt',tvt<99?tvt.toFixed(1).replace('.',',')+' jaar':'>30 jaar');
+
+  const bd=g('d-badge');
+  if(tvt<5)bd.innerHTML='<span class="badge green">uitstekend (&lt;5 jr)</span>';
+  else if(tvt<8)bd.innerHTML='<span class="badge green">goed (5-8 jr)</span>';
+  else if(tvt<12)bd.innerHTML='<span class="badge amber">acceptabel (8-12 jr)</span>';
+  else if(tvt<20)bd.innerHTML='<span class="badge amber">lang (12-20 jr)</span>';
+  else bd.innerHTML='<span class="badge red">twijfelachtig (&gt;20 jr)</span>';
+
+  saveURL(V);
+}
+
+function saveURL(V){
+  const p=new URLSearchParams();
+  Object.entries(V).forEach(([k,v])=>p.set(k,v));
+  p.set('ev',ev);p.set('sal',sal);p.set('bat',bat);
+  const n=g('naam').value.trim();if(n)p.set('naam',encodeURIComponent(n));
+  window.history.replaceState(null,'',location.pathname+'?'+p);
+}
+
+function loadURL(){
+  const p=new URLSearchParams(location.search);
+  ['v','kwp','yld','vast','piek','nacht','tlv','km','eff','aloss','bat','inv','loss','cycli'].forEach(k=>{
+    if(p.has(k)){const e=g('sl-'+k);if(e)e.value=p.get(k);}
+  });
+  if(p.has('ev'))setEV(+p.get('ev'));
+  if(p.has('sal'))setSal(+p.get('sal'));
+  if(p.has('bat'))setBat(p.get('bat'));
+  if(p.has('naam')){g('naam').value=decodeURIComponent(p.get('naam'));updateNaam();}
+}
+
+function resetAll(){
+  Object.entries(DEF).forEach(([k,v])=>{const e=g('sl-'+k);if(e)e.value=v;});
+  g('naam').value='';updateNaam();
+  ev=1;sal=1;setEV(1);setSal(1);setBat('tesla');
+}
+
+function copyLink(){
+  navigator.clipboard.writeText(location.href).then(()=>{
+    const b=event.target,o=b.textContent;
+    b.textContent='\u2713 gekopieerd!';b.style.color='var(--green)';
+    setTimeout(()=>{b.textContent=o;b.style.color='';},2000);
+  }).catch(()=>prompt('Kopieer:',location.href));
+}
+function shareWA(){
+  const n=g('naam').value.trim();
+  window.open('https://wa.me/?text='+encodeURIComponent((n?n+"'s ":'')+'energiecalculator: '+location.href),'_blank');
+}
+function shareMail(){
+  const n=g('naam').value.trim();
+  location.href='mailto:?subject='+encodeURIComponent((n?n+' - ':'')+'Energiecalculator')+'&body='+encodeURIComponent('Bekijk de berekening:\n\n'+location.href);
+}
+
+g('dl-btn').addEventListener('click',e=>{
+  e.preventDefault();
+  const blob=new Blob([document.documentElement.outerHTML],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  const n=g('naam').value.trim().replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  a.download=(n?n+'_':'')+'energie_calculator.html';
+  a.click();
+});
+
+// Inline editing: klik op label -> toon invoerveld
+function editField(k, isBat){
+  const lbl=g('lbl-'+k), ni=g('ni-'+k), sl=g('sl-'+k);
+  if(!ni) return;
+  // Raw waarde uit slider
+  ni.value=sl.value;
+  lbl.style.display='none';
+  ni.classList.add('visible');
+  ni.focus();
+  ni.select();
+}
+
+function commitField(k, isBat){
+  const lbl=g('lbl-'+k), ni=g('ni-'+k), sl=g('sl-'+k);
+  if(!ni) return;
+  let v=parseFloat(ni.value);
+  if(isNaN(v)) v=parseFloat(sl.value);
+  // Clamp to slider min/max but allow typing beyond range for certain fields
+  const mn=parseFloat(sl.min)||0, mx=parseFloat(sl.max)||9999;
+  v=Math.min(Math.max(v, mn*0.5), mx*3); // allow 3x max for free-form fields
+  // Snap to step
+  const step=parseFloat(sl.step)||1;
+  v=Math.round(v/step)*step;
+  // Update slider (clamped to its own range)
+  sl.value=Math.min(Math.max(v,mn),mx);
+  ni.classList.remove('visible');
+  lbl.style.display='';
+  if(isBat) setBat('custom');
+  update();
+}
+
+function niKey(e, k, isBat){
+  if(e.key==='Enter'){ e.preventDefault(); commitField(k, isBat); }
+  if(e.key==='Escape'){ g('ni-'+k).classList.remove('visible'); g('lbl-'+k).style.display=''; }
+}
+
+loadURL();
+update();
+</script>
+</body>
+</html>
