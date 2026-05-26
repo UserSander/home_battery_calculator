@@ -120,6 +120,15 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .note-block{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;font-size:12px;color:var(--text3);line-height:1.8}
 .note-block strong{color:var(--text2);font-weight:500}
 footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+/* TOOLTIPS */
+.tip-wrap{display:inline-flex;align-items:center;gap:.3rem;flex:1}
+.tip-icon{width:14px;height:14px;border-radius:50%;background:var(--border2);color:var(--text3);font-size:9px;font-family:'DM Mono',monospace;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s;user-select:none;line-height:1}
+.tip-icon:hover{background:var(--accent);color:#0e0f0e}
+.tip-box{position:fixed;z-index:500;max-width:240px;background:var(--bg2);border:1px solid var(--accent);border-radius:9px;padding:.65rem .85rem;font-size:12px;color:var(--text2);line-height:1.6;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;display:none}
+.tip-box.show{display:block}
+.tip-box strong{color:var(--text);font-weight:500;display:block;margin-bottom:.2rem;font-size:11px;font-family:'DM Mono',monospace}
+.tip-box .tip-good{color:var(--green);font-size:11px;margin-top:.3rem;display:block}
+.tip-box .tip-warn{color:var(--amber);font-size:11px;margin-top:.3rem;display:block}
 /* WIZARD BUTTON */
 .chat-send{padding:.45rem .9rem;background:var(--accent);border:none;border-radius:7px;color:#0e0f0e;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;transition:background .15s;white-space:nowrap}
 .chat-send:hover{background:#4acc7a}
@@ -357,12 +366,89 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);fon
     <input type="range" id="sl-cycli" min="100" max="500" step="10" value="280" oninput="setBat('custom');update()">
   </div>
   <div class="field">
+    <div class="field-row"><span class="field-label">Omvormervermogen (max laad/ontlaad)</span><span class="field-val" id="lbl-omv" onclick="editField('omv')">5,0 kW</span><input class="num-input" id="ni-omv" type="number" min="1" max="20" step="0.5" onblur="commitField('omv',true)" onkeydown="niKey(event,'omv',true)"></div>
+    <input type="range" id="sl-omv" min="1" max="15" step="0.5" value="5" oninput="setBat('custom');update()">
+  </div>
+  <div class="field">
     <div class="field-row"><span class="field-label">Celdegradatie per jaar</span><span class="field-val" id="lbl-degr" onclick="editField('degr')">2,5%/jr</span><input class="num-input" id="ni-degr" type="number" min="0.5" max="5" step="0.5" onblur="commitField('degr',true)" onkeydown="niKey(event,'degr',true)"></div>
     <input type="range" id="sl-degr" min="0.5" max="5" step="0.5" value="2.5" oninput="setBat('custom');update()">
   </div>
   <div class="field">
     <div class="field-row"><span class="field-label">Max. teruglevering net (kW)</span><span class="field-val" id="lbl-netlim" onclick="editField('netlim')">onbeperkt</span><input class="num-input" id="ni-netlim" type="number" min="0" max="999" step="0.1" onblur="commitField('netlim')" onkeydown="niKey(event,'netlim')"></div>
     <input type="range" id="sl-netlim" min="0" max="15" step="0.1" value="15" oninput="update()">
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Netaansluiting</div>
+
+  <div class="field" style="margin-bottom:.6rem">
+    <div class="field-label" style="margin-bottom:.4rem">Aansluitwaarde</div>
+    <select class="prov-select" id="net-select" onchange="setNetAansluiting()">
+      <option value="1x25">1×25A (5,75 kW) &mdash; standaard woning</option>
+      <option value="1x35">1×35A (8,05 kW)</option>
+      <option value="3x25" selected>3×25A (17,25 kW) &mdash; meerfase standaard</option>
+      <option value="3x35">3×35A (24,15 kW)</option>
+      <option value="3x40">3×40A (27,6 kW)</option>
+      <option value="3x50">3×50A (34,5 kW) &mdash; zwaar gebruik</option>
+      <option value="custom">Aangepast &mdash; gebruik slider hieronder</option>
+    </select>
+    <div style="font-size:11px;color:var(--text3);margin-top:.4rem;font-family:'DM Mono',monospace" id="net-info">
+      Max. teruglevering: <strong id="net-tlv-kw">17,25 kW</strong> &nbsp;&bull;&nbsp; Max. laden: <strong id="net-laad-kw">17,25 kW</strong>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label" id="strat-label">Laadstrategie</div>
+
+  <!-- Strategie pills -->
+  <div class="field" style="margin-bottom:.7rem">
+    <div class="field-label" style="margin-bottom:.4rem">Accu-strategie</div>
+    <div class="toggle-group">
+      <div class="pill" id="pill-strat-max" onclick="setStrategy('max')">Maximaal</div>
+      <div class="pill active" id="pill-strat-slim" onclick="setStrategy('slim')">Slim</div>
+      <div class="pill" id="pill-strat-zuinig" onclick="setStrategy('zuinig')">Zuinig</div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:.35rem;line-height:1.6" id="strat-desc">
+      Slim: laad bij goedkope uren, verkoop bij pieken. Balans tussen rendement en levensduur.
+    </div>
+  </div>
+
+  <!-- Laaddrempel -->
+  <div class="field">
+    <div class="field-row">
+      <span class="field-label">Laaddrempel (laden &le; dit tarief)</span>
+      <span class="field-val" id="lbl-laaddrempel" onclick="editField('laaddrempel')">&#x20ac;0,18/kWh</span>
+      <input class="num-input" id="ni-laaddrempel" type="number" min="0.01" max="0.40" step="0.01" onblur="commitField('laaddrempel')" onkeydown="niKey(event,'laaddrempel')">
+    </div>
+    <input type="range" id="sl-laaddrempel" min="0.01" max="0.40" step="0.01" value="0.18" oninput="setStrategy('custom');update()">
+  </div>
+
+  <!-- Verkoopdrempel -->
+  <div class="field">
+    <div class="field-row">
+      <span class="field-label">Verkoopdrempel (verkoop &ge; dit tarief)</span>
+      <span class="field-val" id="lbl-verkdrempel" onclick="editField('verkdrempel')">&#x20ac;0,30/kWh</span>
+      <input class="num-input" id="ni-verkdrempel" type="number" min="0.05" max="0.80" step="0.01" onblur="commitField('verkdrempel')" onkeydown="niKey(event,'verkdrempel')">
+    </div>
+    <input type="range" id="sl-verkdrempel" min="0.05" max="0.80" step="0.01" value="0.30" oninput="setStrategy('custom');update()">
+  </div>
+
+  <!-- SoC venster -->
+  <div class="field">
+    <div class="field-row">
+      <span class="field-label">Minimale SoC (bodembewaking)</span>
+      <span class="field-val" id="lbl-socmin" onclick="editField('socmin')">10%</span>
+      <input class="num-input" id="ni-socmin" type="number" min="5" max="40" step="5" onblur="commitField('socmin')" onkeydown="niKey(event,'socmin')">
+    </div>
+    <input type="range" id="sl-socmin" min="5" max="40" step="5" value="10" oninput="setStrategy('custom');update()">
+  </div>
+  <div class="field">
+    <div class="field-row">
+      <span class="field-label">Maximale SoC (topbewaking)</span>
+      <span class="field-val" id="lbl-socmax" onclick="editField('socmax')">95%</span>
+      <input class="num-input" id="ni-socmax" type="number" min="60" max="100" step="5" onblur="commitField('socmax')" onkeydown="niKey(event,'socmax')">
+    </div>
+    <input type="range" id="sl-socmax" min="60" max="100" step="5" value="95" oninput="setStrategy('custom');update()">
   </div>
 
   <div class="bat-hint" id="bat-hint"></div>
@@ -374,8 +460,10 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);fon
 <div class="results">
 
   <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-    <button class="adv-btn" style="flex:1;min-width:200px" onclick="openAdvisor()">&#x2728; Adviseer mij &mdash; ideale provider + batterijgrootte</button>
-    <button class="adv-btn" style="flex:1;min-width:200px;background:linear-gradient(135deg,rgba(90,180,240,.15),rgba(90,180,240,.05));border-color:rgba(90,180,240,.35);color:#5ab4f0" onclick="openProfiel()">&#x23F0; Verbruiksprofiel &mdash; wanneer is laden het voordeligst?</button>
+    <button class="adv-btn" style="flex:1;min-width:180px" onclick="openAdvisor()">&#x2728; Adviseer mij</button>
+    <button class="adv-btn" style="flex:1;min-width:180px;background:linear-gradient(135deg,rgba(90,180,240,.15),rgba(90,180,240,.05));border-color:rgba(90,180,240,.35);color:#5ab4f0" onclick="openProfiel()">&#x23F0; Verbruiksprofiel</button>
+    <button class="adv-btn" style="flex:1;min-width:180px;background:linear-gradient(135deg,rgba(240,184,64,.15),rgba(240,184,64,.05));border-color:rgba(240,184,64,.35);color:#f0b840" onclick="openArbitrage()">&#x26A1; Pure arbitrage</button>
+    <button class="adv-btn" style="flex:1;min-width:180px;background:linear-gradient(135deg,rgba(90,219,138,.2),rgba(90,219,138,.05));border-color:rgba(90,219,138,.5);color:#5adb8a;font-weight:500" onclick="applyOptimaal()">&#x1F3AF; Meest optimale instellingen</button>
   </div>
 
   <div class="summary-row">
@@ -626,7 +714,19 @@ footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--border);fon
   </div>
 </div>
 
+<!-- PURE ARBITRAGE MODAL -->
+<div class="modal-bg" id="arb-modal" onclick="if(event.target===this)closeArbitrage()">
+  <div class="modal-box" style="max-width:620px">
+    <div class="modal-head">
+      <h2>&#x26A1; Pure arbitrage &mdash; accu zonder zonnepanelen</h2>
+      <button class="modal-close" onclick="closeArbitrage()">sluiten</button>
+    </div>
+    <div id="arb-content"></div>
+  </div>
+</div>
+
 <!-- ADVISOR MODAL -->
+<div class="tip-box" id="tip-box"></div>
 <div class="modal-bg" id="adv-modal" onclick="if(event.target===this)closeAdvisor()">
   <div class="modal-box">
     <div class="modal-head">
@@ -693,7 +793,7 @@ const PROVIDERS = [
   {id:'vattenfall_3',   name:'Vattenfall (vast 3jr)',       type:'vast', vast:0.269, dyn_piek:0.269, dyn_nacht:0.269, tlv:0.07},
 ];
 
-const DEF={v:5000,kwp:3,yld:900,vast:0.27,piek:0.31,nacht:0.18,tlv:0.07,km:15000,eff:22,aloss:10,bat:20,inv:3500,loss:10,cycli:280,degr:2.5,netlim:15};
+const DEF={v:5000,kwp:3,yld:900,vast:0.27,piek:0.31,nacht:0.18,tlv:0.07,km:15000,eff:22,aloss:10,bat:20,inv:3500,loss:10,cycli:280,degr:2.5,netlim:15,laaddrempel:0.18,verkdrempel:0.30,socmin:10,socmax:95,omv:5};
 const BATS={tesla:{bat:20,inv:3500,loss:10,cycli:280},pw3:{bat:13.5,inv:9500,loss:7,cycli:365},huawei:{bat:15,inv:5800,loss:8,cycli:330},victron:{bat:14.4,inv:4200,loss:9,cycli:310}};
 let ev=1,sal=1,bat='tesla',contractType='vast',provId='',cong=0;
 
@@ -817,6 +917,60 @@ function setCong(v){
   update();
 }
 
+// Netaansluitingen: [ampère, fasen, max kW]
+const NETTEN = {
+  '1x25':{a:25,f:1,kw:5.75},  '1x35':{a:35,f:1,kw:8.05},
+  '3x25':{a:25,f:3,kw:17.25}, '3x35':{a:35,f:3,kw:24.15},
+  '3x40':{a:40,f:3,kw:27.6},  '3x50':{a:50,f:3,kw:34.5},
+  'custom':{a:0,f:1,kw:null}
+};
+
+function setNetAansluiting(){
+  const k=g('net-select').value;
+  const n=NETTEN[k];
+  if(n&&n.kw){
+    // Zet netlim slider op max kW van aansluiting
+    g('sl-netlim').value=Math.min(n.kw,15);
+    const kwStr=n.kw.toLocaleString('nl-NL',{maximumFractionDigits:2});
+    g('net-tlv-kw').textContent=kwStr+' kW';
+    g('net-laad-kw').textContent=kwStr+' kW';
+  } else {
+    g('net-tlv-kw').textContent='zie slider';
+    g('net-laad-kw').textContent='zie slider';
+  }
+  update();
+}
+
+let activeStrategy='slim';
+const STRATEGIES = {
+  max:    {laad:0.22, verk:0.26, socmin:5,  socmax:100, cycli:400, desc:'Elke kans benutten. Hoge opbrengst, meer slijtage (400 cycli/jr, SoC 5-100%).'},
+  slim:   {laad:0.18, verk:0.30, socmin:10, socmax:95,  cycli:280, desc:'Laad bij goedkope uren, verkoop bij pieken. Balans tussen rendement en levensduur.'},
+  zuinig: {laad:0.13, verk:0.38, socmin:20, socmax:80,  cycli:150, desc:'Alleen extreme prijspieken benutten. Minimale slijtage (150 cycli/jr, SoC 20-80%).'},
+};
+
+function setStrategy(k){
+  if(k==='custom'){ activeStrategy='custom'; updateStratPills(); update(); return; }
+  activeStrategy=k;
+  if(STRATEGIES[k]){
+    const s=STRATEGIES[k];
+    g('sl-laaddrempel').value=s.laad;
+    g('sl-verkdrempel').value=s.verk;
+    g('sl-socmin').value=s.socmin;
+    g('sl-socmax').value=s.socmax;
+    g('sl-cycli').value=s.cycli;
+    g('strat-desc').textContent=s.desc;
+  }
+  updateStratPills();
+  update();
+}
+
+function updateStratPills(){
+  ['max','slim','zuinig','custom'].forEach(k=>{
+    const e=g('pill-strat-'+k);
+    if(e) e.className='pill'+(activeStrategy===k?' active':'');
+  });
+}
+
 function setBat(k){
   bat=k;
   ['tesla','pw3','huawei','victron','custom'].forEach(x=>{
@@ -868,115 +1022,84 @@ const SOLAR_PROFILE = [0,0,0,0,0,0.01,0.03,0.07,0.11,0.14,0.16,0.15,0.13,0.10,0.
 function toAllin(mwh, opslagPerKwh){ return ((mwh/1000) + 0.1108 + (opslagPerKwh||0.018)) * 1.21; }
 
 // Dag-optimizer: simuleer 1 jaar op basis van uurprijsprofiel
-// Strategie: laad als prijs < laaddrempel, lever terug als prijs > verkoopdrempel
-// Zonnestroom gaat altijd eerst naar directverbruik, dan batterij, dan terug net
+// Gebruikt ingestelde laad/verkoop-drempels en SoC-venster
 function calcBatSave(V, opwek, netVerbruik, evKwh, scenario){
   const profile = HOUR_PROFILES[scenario];
-  const sc = SPREAD_SCENARIOS[scenario];
   const tlvRate = cong ? 0 : (sal ? V.vast : V.tlv);
   const opslag = scenario==='opt' ? 0.010 : scenario==='real' ? 0.018 : 0.025;
-
-  // All-in prijzen per uur
   const prijzen = profile.map(p => toAllin(p, opslag));
-  const sortedPrijzen = [...prijzen].sort((a,b)=>a-b);
 
-  // Laaddrempel = gemiddelde van goedkoopste 6 uur (kwartiel onderste 25%)
-  const laadDrempel = sortedPrijzen.slice(0,6).reduce((s,v)=>s+v,0)/6;
-  // Verkoopdrempel = gemiddelde van duurste 4 uur
-  const verkDrempel = sortedPrijzen.slice(-4).reduce((s,v)=>s+v,0)/4;
-  // Minimale spread om teruglevering te laten lonen (na verlies)
+  // Gebruik ingestelde drempels (bij dynamisch) of auto-berekend (bij vast/var)
+  const isDynCalc = contractType === 'dyn';
+  const sortedP = [...prijzen].sort((a,b)=>a-b);
+  const autoLaadD = sortedP.slice(0,6).reduce((s,v)=>s+v,0)/6;
+  const autoVerkD = sortedP.slice(-4).reduce((s,v)=>s+v,0)/4;
+  const laadDrempel = isDynCalc ? V.laaddrempel : autoLaadD;
+  const verkDrempel = isDynCalc ? V.verkdrempel : autoVerkD;
+  const socMin = V.socmin * V.bat;
+  const socMax = V.socmax * V.bat;
+  const netLimKwh = V.netlim >= 15 ? V.bat : Math.min(V.netlim, V.bat);
+  const omvLim = V.omvLimKwh || 5; // kWh per uur max laden/ontladen (= kW want 1u)
   const minSpread = 0.04 + V.loss * verkDrempel;
 
-  // Verbruik per uur (kWh) - huishouden verdeeld over dag
   const VERBRUIK_PROFIEL = [0.04,0.03,0.03,0.03,0.03,0.04,0.05,0.06,0.07,0.06,0.05,0.05,0.05,0.05,0.05,0.06,0.07,0.09,0.08,0.07,0.06,0.05,0.04,0.03];
   const dagVerbruik = netVerbruik / 365;
   const zonPerDag = opwek / 365;
 
-  let jaarBesparing = 0;
-  let jaarZonSave = 0;
-  let jaarArbSave = 0;
-  let jaarNegSave = 0;
-  let jaarRetSave = 0;
-  let totLaadKwh = 0;
-  let totRetKwh = 0;
+  let jaarBesparing=0, jaarZonSave=0, jaarArbSave=0, jaarRetSave=0;
+  let totLaadKwh=0, totRetKwh=0;
 
-  // Simuleer 365 dagen
   for(let dag=0; dag<365; dag++){
-    let soc = V.bat * 0.5; // start op 50% SoC elke dag
-    const maxSoc = V.bat;
-    const minSoc = V.bat * 0.10; // 10% buffer
-
+    let soc = V.bat * 0.5;
     for(let u=0; u<24; u++){
       const prijs = prijzen[u];
       const verbruik = dagVerbruik * VERBRUIK_PROFIEL[u];
       const zon = zonPerDag * SOLAR_PROFILE[u];
-      const isNeg = prijs < 0.01; // negatieve of nul prijs
+      const isNeg = prijs < 0.01;
 
-      // Stap 1: zon dekt eerst eigen verbruik
       const zonDirect = Math.min(zon, verbruik);
       let zonOver = zon - zonDirect;
       let verbruikRest = verbruik - zonDirect;
 
-      // Stap 2: zon-overschot in batterij als er ruimte is
-      const zonInBat = Math.min(zonOver, maxSoc - soc);
-      soc += zonInBat;
-      zonOver -= zonInBat;
-      // Restant zon teruglev (bij sal: tarief, anders tlv)
+      // Zon overschot in batterij
+      const zonInBat = Math.min(zonOver, socMax - soc);
+      soc += zonInBat; zonOver -= zonInBat;
       jaarZonSave += zonOver * tlvRate;
 
-      // Stap 3: laden uit net als prijs laag/negatief en batterij niet vol
-      const kanLaden = prijs <= laadDrempel || isNeg;
-      if(kanLaden && soc < maxSoc - 0.5){
-        const laadRuimte = Math.min(maxSoc - soc, V.bat * 0.25); // max 25% per uur
-        const laadKwh = laadRuimte;
-        const laadKosten = isNeg ? prijs * laadKwh : prijs * laadKwh; // negatief = betaald krijgen
+      // Laden uit net bij lage/negatieve prijs
+      if((prijs <= laadDrempel || isNeg) && soc < socMax - 0.3){
+        const laadKwh = Math.min(socMax - soc, omvLim, netLimKwh);
+        jaarArbSave -= prijs * laadKwh;
         soc += laadKwh;
         totLaadKwh += laadKwh;
-        jaarArbSave -= laadKosten; // kosten van laden (negatief = inkomsten)
       }
 
-      // Stap 4: eigen verbruik uit batterij dekken als prijs hoog
-      if(verbruikRest > 0 && soc > minSoc){
-        const uitBat = Math.min(verbruikRest, soc - minSoc);
-        soc -= uitBat;
-        verbruikRest -= uitBat;
-        jaarBesparing += uitBat * prijs; // besparing t.o.v. net afnemen
+      // Eigen verbruik uit batterij
+      if(verbruikRest > 0 && soc > socMin){
+        const uitBat = Math.min(verbruikRest, soc - socMin, omvLim);
+        soc -= uitBat; verbruikRest -= uitBat;
+        jaarBesparing += uitBat * prijs;
       }
 
-      // Stap 5: rest verbruik van net
-      // (geen extra kosten berekenen, die zijn al in huisB verwerkt)
-
-      // Stap 6: terugleveren als prijs > verkoopdrempel en batterij vol genoeg
-      const kanVerkopen = prijs >= verkDrempel && (prijs - laadDrempel > minSpread);
-      if(kanVerkopen && soc > minSoc + V.bat * 0.3){
-        const retKwh = Math.min(soc - minSoc - V.bat*0.3, V.bat * 0.2); // max 20%/uur
-        const retOpbrengst = retKwh * (1-V.loss) * prijs;
+      // Terugleveren bij hoge prijs
+      if(prijs >= verkDrempel && (prijs - laadDrempel > minSpread) && soc > socMin + V.bat * 0.2){
+        const retKwh = Math.min(soc - socMin - V.bat*0.2, omvLim, netLimKwh);
+        jaarRetSave += retKwh * (1-V.loss) * prijs;
         soc -= retKwh;
         totRetKwh += retKwh;
-        jaarRetSave += retOpbrengst;
       }
     }
   }
 
-  // Voeg teruglevering en arbitrage samen
-  const batArb = Math.max(jaarArbSave + jaarBesparing, 0); // netto arbitrage + eigen gebruik
-  const negBonus = Math.max(-jaarArbSave * 0.3, 0); // deel van inkomsten uit neg. uren
-  const retSave = jaarRetSave; // daadwerkelijke verkoopopbrengst
+  const batArb = Math.max(jaarArbSave + jaarBesparing, 0);
+  const negBonus = Math.max(-jaarArbSave * 0.3, 0) + jaarRetSave;
   const batZon = jaarZonSave;
   const evArb = ev ? evKwh * (scenario==='opt' ? 0.09 : scenario==='real' ? 0.05 : 0.01) : 0;
 
-  return {
-    batZon,
-    batArb,
-    negBonus: negBonus + retSave,
-    evArb,
-    totLaadKwh: Math.round(totLaadKwh),
-    totRetKwh: Math.round(totRetKwh),
-    laadDrempel,
-    verkDrempel,
-    prijzen,
-    total: batZon + batArb + negBonus + retSave + evArb
-  };
+  return { batZon, batArb, negBonus, evArb,
+    totLaadKwh: Math.round(totLaadKwh), totRetKwh: Math.round(totRetKwh),
+    laadDrempel, verkDrempel, prijzen,
+    total: batZon + batArb + negBonus + evArb };
 }
 
 function updateNaam(){
@@ -990,7 +1113,10 @@ function update(){
     v:nv('v'),kwp:nv('kwp'),yld:nv('yld'),vast:nv('vast'),piek:nv('piek'),
     nacht:nv('nacht'),tlv:nv('tlv'),km:nv('km'),eff:nv('eff'),aloss:nv('aloss')/100,
     bat:nv('bat'),inv:nv('inv'),loss:nv('loss')/100,cycli:nv('cycli'),
-    degr:nv('degr')/100, netlim:nv('netlim')
+    degr:nv('degr')/100, netlim:nv('netlim'),
+    laaddrempel:nv('laaddrempel'), verkdrempel:nv('verkdrempel'),
+    socmin:nv('socmin')/100, socmax:nv('socmax')/100,
+    omv:nv('omv')
   };
   const isDyn=contractType==='dyn';
 
@@ -1009,6 +1135,17 @@ function update(){
   s('lbl-cycli',V.cycli+' cycli');
   s('lbl-degr',(V.degr*100).toFixed(1).replace('.',',')+'%/jr');
   s('lbl-netlim',V.netlim>=15?'onbeperkt':V.netlim.toFixed(1)+' kW');
+  s('lbl-omv',V.omv.toFixed(1).replace('.',',')+' kW');
+  // Maximaal haalbare cycli gegeven omvormervermogen en batterijcapaciteit
+  const maxCycliPerDag = Math.min((V.omv * 20) / V.bat, 2.5); // max 2.5x per dag fysiek
+  const maxCycliPerJaar = Math.round(maxCycliPerDag * 365);
+  const cycliCapped = Math.min(V.cycli, maxCycliPerJaar);
+  V.cycli = cycliCapped; // pas effectieve cycli aan in V
+  V.omvLimKwh = V.omv; // kWh per uur max laden/ontladen
+  s('lbl-cycli', cycliCapped + (cycliCapped < nv('cycli') ? ' <span style="color:var(--amber);font-size:10px">(begrensd door omvormer)</span>' : ' cycli'));
+  s('lbl-verkdrempel','\u20AC'+V.verkdrempel.toFixed(2).replace('.',',')+'/kWh');
+  s('lbl-socmin',Math.round(V.socmin*100)+'%');
+  s('lbl-socmax',Math.round(V.socmax*100)+'%');
 
   // Huis
   const opwek=V.kwp*V.yld;
@@ -1361,13 +1498,14 @@ function saveURL(V){
   Object.entries(V).forEach(([k,v])=>p.set(k,v));
   p.set('ev',ev);p.set('sal',sal);p.set('bat',bat);
   p.set('ct',contractType);p.set('prov',provId);p.set('cong',cong);
+  p.set('strat',activeStrategy);
   const n=g('naam').value.trim();if(n)p.set('naam',encodeURIComponent(n));
   window.history.replaceState(null,'',location.pathname+'?'+p);
 }
 
 function loadURL(){
   const p=new URLSearchParams(location.search);
-  ['v','kwp','yld','vast','piek','nacht','tlv','km','eff','aloss','bat','inv','loss','cycli','degr','netlim'].forEach(k=>{
+  ['v','kwp','yld','vast','piek','nacht','tlv','km','eff','aloss','bat','inv','loss','cycli','degr','netlim','laaddrempel','verkdrempel','socmin','socmax','omv'].forEach(k=>{
     if(p.has(k)){const e=g('sl-'+k);if(e)e.value=p.get(k);}
   });
   if(p.has('ev'))setEV(+p.get('ev'));
@@ -1375,6 +1513,7 @@ function loadURL(){
   if(p.has('cong'))setCong(+p.get('cong'));
   if(p.has('bat'))setBat(p.get('bat'));
   if(p.has('ct'))setContract(p.get('ct'),true);
+  if(p.has('strat'))setStrategy(p.get('strat'));
   if(p.has('prov')&&p.get('prov')){
     g('prov-select').value=p.get('prov');
     setProvider();
@@ -1387,9 +1526,11 @@ function resetAll(){
   g('naam').value='';updateNaam();
   ev=1;sal=1;provId='';cong=0;
   setEV(1);setSal(1);setCong(0);setBat('tesla');
-  setContract('vast');
+  setContract('vast');setStrategy('slim');
   g('prov-select').value='';
   g('prov-banner').className='prov-banner';
+  g('net-select').value='3x25';
+  setNetAansluiting();
   update();
 }
 
@@ -1807,9 +1948,339 @@ function berekenProfiel(){
   profNext('result');
 }
 
+// ─── TOOLTIP SYSTEEM ──────────────────────────────────────────────────────────
+const TIPS = {
+  'v':        { title:'Jaarverbruik huis', text:'Totaal stroomverbruik van je woning per jaar. Gemiddeld NL: ~2.500 kWh. Met warmtepomp: 5.000-8.000 kWh. Check je jaarrekening voor het exacte getal.', good: v=>`${v<3000?'Laag verbruik: batterij minder rendabel':''}${v>6000?'Hoog verbruik: grote batterij rendeert goed':v>=3000&&v<=6000?'Gemiddeld: goede batterijcandidaat':''}` },
+  'kwp':      { title:'Zonnepanelen capaciteit', text:'Totaal piekvermogen van je zonnepanelen. 1 paneel ≈ 0,4 kWp. Met 9 panelen: ~3,6 kWp. Hoe meer kWp, hoe groter de batterij die je nodig hebt om surplus op te slaan.', good: (v,V)=>`Jouw ${v} kWp produceert ~${Math.round(v*900)} kWh/jr. Ideale batterij: ~${Math.max(4,Math.round(v*900/365*0.6/2)*2)} kWh.` },
+  'yld':      { title:'Opbrengst per kWp', text:'Hoeveel kWh je per kWp per jaar opwekt. NL gemiddelde: 875-920 kWh/kWp. Zuid-NL en schuin zuidgericht dak: hoger. Oost-west of schaduw: lager (750-850).', good: v=>`${v>=900?'Goed: boven NL gemiddelde':v>=800?'Normaal voor NL':v<800?'Laag: controleer dakoriëntatie of schaduw':''}` },
+  'vast':     { title:'Tarief incl. btw + energiebelasting', text:'Je all-in stroomprijs. Staat op je jaarrekening of in de leverancierapp. Gemiddeld NL mei 2026: €0,23-0,28/kWh. Dit is je referentietarief voor scenario A.', good: v=>`${v<0.24?'Laag tarief: overstappen naar dynamisch levert minder op':v>0.30?'Hoog tarief: dynamisch contract zeker interessant':'Gemiddeld tarief'}` },
+  'piek':     { title:'Dynamisch dagpiek (17-21u)', text:'Prijs op je dynamisch contract tijdens avondpiek. Dit zijn de duurste uren. Historisch EPEX NL: €0,25-0,40/kWh all-in. De batterij ontlaadt bij voorkeur hier.', good: (v,V)=>`Spread met nacht: €${(v-(V?.nacht||0.18)).toFixed(2)}/kWh. ${(v-(V?.nacht||0.18))>0.15?'Goede arbitragekans':'Kleine spread, beperkt rendement'}` },
+  'nacht':    { title:'Dynamisch nacht (01-06u)', text:'Goedkoopste uren op een dynamisch contract. Hier laad je de batterij en de auto. Historisch gem. all-in: €0,14-0,20/kWh. Hoe lager, hoe beter de arbitrage.', good: v=>`${v<0.16?'Laag: uitstekend laadmoment':v<0.22?'Normaal: goed laadmoment':'Relatief hoog nacht-tarief'}` },
+  'tlv':      { title:'Terugleververgoeding', text:'Wat je krijgt per kWh die je teruggeeft aan het net. Na 2027: minimaal 50% van kale leveringstarief, typisch €0,06-0,10/kWh. Bij saldering actief: gelijk aan jouw stroomtarief.', good: (v,V)=>`${sal?'Saldering actief: effectief '+ED(V?.vast||0.27)+'/kWh':'Post-2027: batterij opslaan is €'+(((V?.vast||0.27)-v).toFixed(2))+'/kWh waard t.o.v. terugleveren'}` },
+  'km':       { title:'Kilometers per jaar', text:'Totaal rijafstand per jaar. Nederlandse gemiddelde: ~14.000 km. Meer km = groter laadvoordeel bij nachtladen.', good: v=>`${v>25000?'Veel rijden: nachtladen geeft >€500/jr extra besparing':v>10000?'Gemiddeld: nachtladen loont duidelijk':'Weinig rijden: EV-voordeel beperkt'}` },
+  'eff':      { title:'Verbruik per 100 km', text:'Energieverbruik van de auto. Model X praktijk: 21-24 kWh/100km. Model 3 LR: 15-18. Hogere waarde = meer laadstroom per jaar.', good: v=>`${v>22?'Zwaar: Model X/S bereik':v<18?'Zuinig: Model 3/Y bereik':'Gemiddeld bereik'}` },
+  'aloss':    { title:'Laadverlies AC (thuis)', text:'Energie die verloren gaat als warmte bij thuisladen via wallbox. Typisch 8-12%. Bij een goedkope laadkabel hoger (15%). Gebruik altijd een kwalitatieve wallbox.', good: v=>`${v<=10?'Goed: efficiënte wallbox':v<=13?'Normaal: acceptabel':v>13?'Hoog: overweeg betere wallbox':''}` },
+  'bat':      { title:'Bruikbare batterijcapaciteit', text:'Hoeveel kWh je effectief in en uit kunt halen. Bij Tesla 18650 pakket: stel SoC 10-90% in via BMS, dan ≈ 80% van nominale capaciteit. Een 25 kWh pakket geeft ~20 kWh bruikbaar.', good: (v,V)=>{ const ideal=Math.max(4,Math.round((V?.kwp||3)*900/365*0.6/2)*2); return `${v<ideal*0.7?'Te klein voor opwek: overweeg '+ideal+' kWh':v>ideal*1.6?'Groter dan nodig: rendement per € daalt':'Goede maat voor jouw opwek'}` } },
+  'inv':      { title:'Totale investering', text:'Alle kosten: batterijpakket, BMS, omvormer, behuizing, bekabeling, installateur. Tesla 18650 DIY realistisch: €2.500-4.500. Powerwall 3 turn-key: €9.500-11.000.', good: (v,V)=>{ const bat=V?.bat||20; return `Kosten per kWh: €${Math.round(v/bat)}/kWh. ${v/bat<200?'Goede prijs per kWh':v/bat<350?'Normaal':v/bat<500?'Aan de hoge kant':'Duur: vergelijk alternatieven'}` } },
+  'loss':     { title:'Round-trip verlies', text:'Percentage energie dat verloren gaat bij 1x laden en 1x ontladen. Tesla 18650 goed onderhouden: 8-12%. Slechte cellen of hoge temperatuur: 15-20%. Lager = meer arbitragerendement.', good: v=>`${v<=10?'Uitstekend: efficiënte omvormer + goede cellen':v<=14?'Normaal: acceptabel':v>14?'Hoog: controleer omvormertype en celkwaliteit':''}` },
+  'cycli':    { title:'Laadcycli per jaar', text:'Hoe vaak de batterij per jaar een volledige cyclus doorloopt. Meer cycli = meer opbrengst maar ook meer slijtage. Tesla 18650 cellen: ~1000-1500 totale cycli op 80% SoH. Bij 280 cycli/jr: levensduur ~5 jaar tot 80% SoH.', good: v=>`${v<=150?'Zuinig: lang leven, minder rendement':v<=300?'Slim: goede balans':v<=400?'Actief: goed rendement, verhoogde slijtage':'Te hoog: versnelde degradatie'}` },
+  'omv':      { title:'Omvormervermogen', text:'Maximale laad/ontlaadvermogen van je omvormer (bijv. Victron MultiPlus-II). Bepaalt hoe snel je kunt laden en hoeveel je per uur kunt terugleveren. Meer vermogen = meer arbitragemogelijkheden maar ook hogere kosten.', good: (v,V)=>{ const batKwh=V?.bat||20; const laadtijd=(batKwh/v).toFixed(1); return `Bij ${v} kW en ${batKwh} kWh: volladen duurt ~${laadtijd}u. ${v<4?'Laag: beperkt arbitrage per uur':v<=7?'Gangbaar voor thuisopslag':v>10?'Krachtig: ook zakelijke optie':'Goed vermogen'}` } },
+  'degr':     { title:'Celdegradatie per jaar', text:'Hoeveel capaciteit de batterij elk jaar verliest. Tesla 18650 cellen (Panasonic NCA): realistisch 2-3%/jaar bij normaal gebruik. Hoge temperatuur en veel laden op 100% SoC versnellen dit.', good: v=>`${v<=2?'Laag: lange levensduur':v<=3?'Normaal voor 18650 cellen':v>3?'Hoog: beperk SoC max tot 90% en houd koel':''}` },
+  'netlim':   { title:'Max. teruglevering net (kW)', text:'Hoeveel vermogen je maximaal terug mag leveren aan het net. Bepaald door netbeheerder en aansluiting. Gebruik de Netaansluiting-dropdown om dit automatisch in te stellen.', good: v=>`${v>=15?'Onbeperkt: volledige omvormercapaciteit benutbaar':v<5?'Beperkt: weinig teruglevering mogelijk':'Deels beperkt: let op bij piek-verkoop'}` },
+  'laaddrempel': { title:'Laaddrempel', text:'Batterij laadt alleen als de stroomprijs op of onder dit bedrag ligt. Lager = zuiniger met cycli maar minder kansen. Hoger = meer laadmomenten maar ook duurder laden. Automatisch ingesteld door de strategie-keuze.', good: (v,V)=>{ const spread=((V?.verkdrempel||0.30)-v); return `Spread met verkoopdrempel: €${spread.toFixed(2)}/kWh. ${spread>0.15?'Goede marge':spread>0.08?'Matige marge':spread>0?'Krappe marge, verlies mogelijk':'Let op: drempels staan verkeerd om'}` } },
+  'verkdrempel': { title:'Verkoopdrempel', text:'Batterij verkoopt stroom terug als de prijs op of boven dit bedrag ligt. Hoger = minder vaak verkopen maar hogere prijs per kWh. Combineer met laaddrempel: het verschil is je bruto marge.', good: (v,V)=>{ const spread=(v-(V?.laaddrempel||0.18)); const loss=(V?.loss||0.10); return `Na ${Math.round(loss*100)}% verlies: netto €${(spread*(1-loss)).toFixed(2)}/kWh. ${spread*(1-loss)>0.10?'Winstgevend':'Controleer of marge de cycli-slijtage dekt'}` } },
+  'socmin':   { title:'Minimale SoC (bodembewaking)', text:'De batterij ontlaadt nooit verder dan dit percentage. Beschermt cellen tegen diepe ontlading. Voor Tesla 18650: minimaal 10%, liever 15-20% voor langere levensduur.', good: v=>`${v<=10?'Risicovol voor celgezondheid':v<=20?'Normaal: goede bescherming':v>20?'Conservatief: minder bruikbare capaciteit':''}` },
+  'socmax':   { title:'Maximale SoC (topbewaking)', text:'Batterij laadt nooit boven dit percentage. 100% SoC verkort levensduur aanzienlijk. Aanbevolen: 90-95% voor dagelijks gebruik, 80% voor maximale levensduur.', good: v=>`${v>=100?'Niet aanbevolen: verkort levensduur sterk':v>=95?'Acceptabel: kleine impact':v>=85?'Goed: balans tussen capaciteit en leven':v<85?'Conservatief: lange levensduur':''}` },
+};
+
+const tipBox = document.getElementById('tip-box');
+let tipTimeout = null;
+
+function showTip(id, el){
+  const def = TIPS[id];
+  if(!def) return;
+  // Dynamische advies op basis van huidige sliderwaarde
+  const V = {};
+  ['v','kwp','yld','vast','piek','nacht','tlv','km','eff','aloss','bat','inv','loss','cycli','omv','degr','netlim','laaddrempel','verkdrempel','socmin','socmax'].forEach(k=>{
+    const e = document.getElementById('sl-'+k);
+    if(e) V[k] = +e.value;
+  });
+  const currentVal = V[id];
+  const goodText = def.good ? def.good(currentVal, V) : '';
+
+  tipBox.innerHTML = `<strong>${def.title}</strong>${def.text}${goodText ? `<span class="${goodText.includes('Goed')||goodText.includes('Laag')&&id==='loss'?'tip-good':'tip-warn'}">${goodText}</span>` : ''}`;
+
+  const rect = el.getBoundingClientRect();
+  const boxW = 240;
+  let left = rect.right + 8;
+  if(left + boxW > window.innerWidth) left = rect.left - boxW - 8;
+  tipBox.style.left = Math.max(8, left) + 'px';
+  tipBox.style.top = Math.max(8, rect.top - 10) + 'px';
+  tipBox.classList.add('show');
+}
+
+function hideTip(){
+  tipTimeout = setTimeout(()=>tipBox.classList.remove('show'), 200);
+}
+
+// Injecteer ? iconen in alle field-rows na laden
+function injectTipIcons(){
+  Object.keys(TIPS).forEach(id=>{
+    const sl = document.getElementById('sl-'+id);
+    if(!sl) return;
+    const fieldRow = sl.closest('.field')?.querySelector('.field-row');
+    if(!fieldRow) return;
+    const lbl = fieldRow.querySelector('.field-label');
+    if(!lbl || lbl.querySelector('.tip-icon')) return;
+    const icon = document.createElement('span');
+    icon.className = 'tip-icon';
+    icon.textContent = '?';
+    icon.onmouseenter = (e)=>{ clearTimeout(tipTimeout); showTip(id, icon); };
+    icon.onmouseleave = hideTip;
+    icon.onclick = (e)=>{ e.stopPropagation(); clearTimeout(tipTimeout); showTip(id, icon); };
+    lbl.appendChild(icon);
+  });
+}
+
+// ─── PURE ARBITRAGE ANALYSE ────────────────────────────────────────────────────
+function openArbitrage(){
+  const V={
+    bat:nv('bat'), inv:nv('inv'), loss:nv('loss')/100,
+    laaddrempel:nv('laaddrempel'), verkdrempel:nv('verkdrempel'),
+    socmin:nv('socmin')/100, socmax:nv('socmax')/100,
+    omv:nv('omv'), degr:nv('degr')/100, cycli:nv('cycli'),
+    v:nv('v'), kwp:nv('kwp'), yld:nv('yld')
+  };
+
+  // Simuleer pure arbitrage: geen zon, geen EV, alleen kopen/verkopen
+  // Gebruik realistisch EPEX profiel
+  const prijzen = HOUR_PROFILES.real.map(p=>toAllin(p, 0.018));
+  const laadD = V.laaddrempel, verkD = V.verkdrempel;
+  const socMin = V.socmin * V.bat, socMax = V.socmax * V.bat;
+  const omvLim = V.omv;
+  const netLim = nv('netlim') >= 15 ? V.bat : nv('netlim');
+
+  // Bereken per dag hoeveel cycli en winst
+  let jaarWinst=0, jaarLaadKwh=0, jaarVerkKwh=0, dagWinstArr=[];
+  const dagPrijzen = prijzen;
+
+  for(let dag=0; dag<365; dag++){
+    let soc = V.bat * 0.5, dagW=0;
+    for(let u=0; u<24; u++){
+      const p = dagPrijzen[u];
+      // Laden
+      if(p <= laadD && soc < socMax - 0.2){
+        const kw = Math.min(socMax - soc, omvLim, netLim);
+        jaarWinst -= p * kw; dagW -= p * kw;
+        soc += kw; jaarLaadKwh += kw;
+      }
+      // Verkopen
+      if(p >= verkD && (p - laadD > 0.03 + V.loss * p) && soc > socMin + V.bat*0.15){
+        const kw = Math.min(soc - socMin - V.bat*0.15, omvLim, netLim);
+        const opbr = kw * (1-V.loss) * p;
+        jaarWinst += opbr; dagW += opbr;
+        soc -= kw; jaarVerkKwh += kw;
+      }
+    }
+    dagWinstArr.push(dagW);
+  }
+
+  const nettoCycli = Math.round(jaarLaadKwh / V.bat);
+  const winstPerCyclus = nettoCycli > 0 ? jaarWinst / nettoCycli : 0;
+  const tvtArb = jaarWinst > 10 ? V.inv / jaarWinst : 999;
+
+  // Gevoeligheidsanalyse: winst bij verschillende spreads
+  const spreads = [0.05,0.08,0.10,0.12,0.15,0.18,0.20,0.25];
+  const spreadData = spreads.map(sp=>{
+    // Simuleer met laadD en laadD+sp als verkoopprijs
+    let w=0, lkwh=0;
+    for(let dag=0;dag<365;dag++){
+      let soc=V.bat*0.5;
+      for(let u=0;u<24;u++){
+        const p=dagPrijzen[u];
+        if(p<=laadD && soc<socMax-0.2){ const kw=Math.min(socMax-soc,omvLim); w-=p*kw; soc+=kw; lkwh+=kw; }
+        if(p>=laadD+sp && soc>socMin+V.bat*0.15){ const kw=Math.min(soc-socMin-V.bat*0.15,omvLim); w+=kw*(1-V.loss)*p; soc-=kw; }
+      }
+    }
+    return { sp, winst:Math.round(w), cycli:Math.round(lkwh/V.bat) };
+  });
+
+  // Zonnepanelen break-even analyse
+  // Hoeveel kWp nodig zodat de accu rendabel wordt?
+  // Rendabiliteit: besparing door zonnestroom opslaan > extra investment overhead
+  const verbruik = V.v || 5000;
+  const kwpRange = [0,1,2,3,4,5,6,8,10,12,15];
+  const kwpData = kwpRange.map(kwp=>{
+    const opwek = kwp * 900;
+    const dir = Math.min(opwek*0.4, verbruik);
+    const ret = opwek - dir;
+    const net = verbruik - dir;
+    const tlvRate = sal ? nv('vast') : nv('tlv');
+    // Batbesparing: zon opslaan + arbitrage
+    const extraZon = Math.min(ret*0.85, V.bat*250);
+    const batZon = extraZon * (nv('vast') - tlvRate);
+    const arbBase = Math.max(jaarWinst, 0); // arbitrage los van zon
+    const total = batZon + arbBase;
+    const tvt = total > 10 ? V.inv / total : 999;
+    return { kwp, total:Math.round(total), tvt:tvt<99?+tvt.toFixed(1):null };
+  });
+  const rendabelKwp = kwpData.find(d=>d.tvt!==null&&d.tvt<12);
+
+  // Break-even spread berekenen (welke spread nodig voor TVT < 10j?)
+  const bepSpread = spreadData.find(d=>d.winst>0&&V.inv/d.winst<10);
+
+  // SVG: winst per spread
+  const maxW = Math.max(...spreadData.map(d=>d.winst), 100);
+  let svgBars='';
+  const bW=50, bGap=8, svgW=560, svgH=120, padL=50, padB=25;
+  const plotW = svgW-padL-20;
+  spreadData.forEach((d,i)=>{
+    const x = padL + i*(bW+bGap);
+    const barH = d.winst>0 ? Math.max((d.winst/maxW)*(svgH-padB-10),2) : 2;
+    const y = svgH-padB-barH;
+    const col = d.winst<=0?'#f05555':V.inv/d.winst<10?'#5adb8a':V.inv/d.winst<15?'#f0b840':'#8a8f87';
+    svgBars+=`<rect x="${x}" y="${y}" width="${bW}" height="${barH}" fill="${col}" rx="3" opacity="0.85"/>`;
+    svgBars+=`<text x="${x+bW/2}" y="${svgH-padB+12}" text-anchor="middle" font-size="8" fill="#555a52" font-family="DM Mono,monospace">€${d.sp.toFixed(2)}</text>`;
+    if(d.winst>0) svgBars+=`<text x="${x+bW/2}" y="${y-3}" text-anchor="middle" font-size="8" fill="${col}" font-family="DM Mono,monospace">€${d.winst}</text>`;
+  });
+  // Y-axis
+  svgBars+=`<text x="8" y="${svgH-padB}" font-size="8" fill="#555a52" font-family="DM Mono,monospace">€0</text>`;
+  svgBars+=`<text x="8" y="${svgH-padB-(svgH-padB-10)*0.5}" font-size="8" fill="#555a52" font-family="DM Mono,monospace">€${Math.round(maxW/2)}</text>`;
+  svgBars+=`<text x="8" y="12" font-size="8" fill="#555a52" font-family="DM Mono,monospace">€${Math.round(maxW)}</text>`;
+  svgBars+=`<line x1="${padL}" x2="${svgW-20}" y1="${svgH-padB}" y2="${svgH-padB}" stroke="#2a2d2a" stroke-width="1"/>`;
+
+  // SVG: kWp vs terugverdientijd
+  const tvtMax=20;
+  let svgKwp='';
+  const kpW=(svgW-padL-20)/(kwpRange.length-1);
+  kwpData.forEach((d,i)=>{
+    if(i===0) return;
+    const x=padL+(i)*kpW;
+    const tvtV=d.tvt||tvtMax;
+    const y=(svgH-padB)-(1-Math.min(tvtV,tvtMax)/tvtMax)*(svgH-padB-10);
+    const col=tvtV<8?'#5adb8a':tvtV<12?'#f0b840':tvtV<15?'#f0b840':'#f05555';
+    if(i>1){
+      const px=padL+(i-1)*kpW;
+      const pd=kwpData[i-1]; const ptv=pd.tvt||tvtMax;
+      const py=(svgH-padB)-(1-Math.min(ptv,tvtMax)/tvtMax)*(svgH-padB-10);
+      svgKwp+=`<line x1="${px}" y1="${py}" x2="${x}" y2="${y}" stroke="#f0b840" stroke-width="1.5"/>`;
+    }
+    svgKwp+=`<circle cx="${x}" cy="${y}" r="3" fill="${col}"/>`;
+    svgKwp+=`<text x="${x}" y="${svgH-padB+12}" text-anchor="middle" font-size="8" fill="#555a52" font-family="DM Mono,monospace">${d.kwp}</text>`;
+    if(d.tvt) svgKwp+=`<text x="${x}" y="${y-5}" text-anchor="middle" font-size="8" fill="${col}" font-family="DM Mono,monospace">${d.tvt}j</text>`;
+  });
+  svgKwp+=`<line x1="${padL}" x2="${svgW-20}" y1="${svgH-padB}" y2="${svgH-padB}" stroke="#2a2d2a" stroke-width="1"/>`;
+  // TVT=10 lijn
+  const y10=(svgH-padB)-(1-10/tvtMax)*(svgH-padB-10);
+  svgKwp+=`<line x1="${padL}" x2="${svgW-20}" y1="${y10}" y2="${y10}" stroke="#5adb8a" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>`;
+  svgKwp+=`<text x="${padL+2}" y="${y10-3}" font-size="8" fill="#5adb8a" font-family="DM Mono,monospace" opacity="0.8">10 jaar drempel</text>`;
+
+  const E2=v=>'\u20AC'+Math.round(v).toLocaleString('nl-NL');
+
+  g('arb-content').innerHTML=`
+  <div class="adv-section">
+    <div class="adv-section-title">Pure arbitrage met jouw accu (${V.bat} kWh, ${V.omv} kW omvormer)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:.8rem">
+      <div class="adv-card ${jaarWinst>200?'green':jaarWinst>0?'amber':''}">
+        <div class="adv-card-title">${E2(jaarWinst)}/jaar</div>
+        <div class="adv-card-body">Netto winst pure arbitrage<br><span style="font-size:11px;color:var(--text3)">${nettoCycli} cycli/jr, €${winstPerCyclus.toFixed(2)}/cyclus</span></div>
+      </div>
+      <div class="adv-card ${tvtArb<10?'green':tvtArb<15?'amber':''}">
+        <div class="adv-card-title">${tvtArb<99?tvtArb.toFixed(1)+' jaar':'>25 jaar'}</div>
+        <div class="adv-card-body">Terugverdientijd<br><span style="font-size:11px;color:var(--text3)">zonder zonnepanelen</span></div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-card-title">${Math.round(jaarVerkKwh).toLocaleString('nl-NL')} kWh</div>
+        <div class="adv-card-body">Verkocht per jaar<br><span style="font-size:11px;color:var(--text3)">${Math.round(jaarLaadKwh).toLocaleString('nl-NL')} kWh ingekocht</span></div>
+      </div>
+    </div>
+    ${jaarWinst<=0?`<div style="background:rgba(240,85,85,.07);border:1px solid rgba(240,85,85,.2);border-radius:8px;padding:.7rem .9rem;font-size:12px;color:#f05555;margin-bottom:.8rem">
+      Met jouw drempelinstellingen (laden ≤€${laadD.toFixed(2)}, verkopen ≥€${verkD.toFixed(2)}) is er geen winstgevende arbitrage op het historisch EPEX-profiel. De spread is te klein of de drempels staan te dicht bij elkaar om het round-trip verlies (${Math.round(V.loss*100)}%) te dekken. Verlaag de laaddrempel of verhoog de verkoopdrempel.
+    </div>`:''}
+    ${bepSpread?`<div style="background:rgba(90,219,138,.07);border:1px solid rgba(90,219,138,.2);border-radius:8px;padding:.7rem .9rem;font-size:12px;color:var(--green);margin-bottom:.8rem">
+      Break-even voor TVT &lt;10 jaar: spread van minimaal €${bepSpread.sp.toFixed(2)}/kWh nodig. Op historisch EPEX NL 2024-2025 waren er dagelijks gemiddeld 6-8 uur met dit spreadverschil.
+    </div>`:''}
+  </div>
+
+  <div class="adv-section">
+    <div class="adv-section-title">Jaarwinst per spread (laden @€${laadD.toFixed(2)}, x-as = spread)</div>
+    <svg viewBox="0 0 560 120" style="width:100%;height:120px" preserveAspectRatio="none">${svgBars}</svg>
+    <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:.3rem">
+      X-as: spread (verschil laad- en verkoopprijs). Groen = TVT &lt;10j, amber = 10-15j, grijs = &gt;15j.
+    </div>
+  </div>
+
+  <div class="adv-section">
+    <div class="adv-section-title">Hoeveel zonnepanelen nodig voor rendabele accu? (kWp, x-as)</div>
+    <svg viewBox="0 0 560 120" style="width:100%;height:120px" preserveAspectRatio="none">${svgKwp}</svg>
+    <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:.3rem">
+      Y-as: terugverdientijd in jaren. ${rendabelKwp?`Accu wordt rendabel (TVT &lt;12j) vanaf <strong style="color:#5adb8a">${rendabelKwp.kwp} kWp</strong> bij jouw verbruik van ${verbruik.toLocaleString('nl-NL')} kWh/jr.`:'Accu blijft lastig rendabel op zonnestroom alleen. Pure arbitrage kan het gat dichten bij grote spreads.'}
+    </div>
+  </div>
+
+  <div class="adv-section">
+    <div class="adv-section-title">Conclusie voor jouw situatie</div>
+    <div class="adv-card-body" style="font-size:12px;color:var(--text2);line-height:1.8">
+      ${jaarWinst>500?`<strong style="color:#5adb8a">Pure arbitrage loont.</strong> Je kunt €${Math.round(jaarWinst)}/jaar verdienen puur door in te kopen op goedkope uren en te verkopen op dure uren. Dit vereist een dynamisch contract met teruglevermogelijkheid en slimme automatisering (Home Assistant + Nordpool-integratie).`
+      :jaarWinst>0?`<strong style="color:#f0b840">Pure arbitrage is marginaal.</strong> Je verdient €${Math.round(jaarWinst)}/jaar. Combineer met zonnestroom voor betere cijfers.`
+      :`<strong style="color:#f05555">Pure arbitrage dekt de kosten niet.</strong> Vergroot de spread door de laaddrempel lager of verkoopdrempel hoger te zetten, of vergroot het omvormervermogen zodat je meer kWh per dag kunt verhandelen.`}
+      <br><br>
+      De werkelijke winst hangt af van de dagelijkse EPEX NL spreads. In 2025 waren er ${SPREAD_SCENARIOS.real.negU} uur negatieve prijzen — dat zijn uren waarbij je betaald wordt om stroom af te nemen. Een slim laadsysteem pakt al die momenten automatisch.
+    </div>
+  </div>`;
+  g('arb-modal').classList.add('open');
+}
+function closeArbitrage(){ g('arb-modal').classList.remove('open'); }
+
+// ─── MEEST OPTIMALE INSTELLINGEN ─────────────────────────────────────────────
+function applyOptimaal(){
+  // Bereken optimale instellingen op basis van huidige situatie
+  const verbruik=nv('v'), kwp=nv('kwp'), yld=nv('yld'), omv=nv('omv');
+  const opwek=kwp*yld;
+  const dagOpwek=opwek/365;
+
+  // 1. Optimale batterijgrootte
+  const dagSurplus=dagOpwek*0.6; // 60% surplus (rest direct verbruik)
+  const evDag=ev?(nv('km')/100*nv('eff')*1.1)/365:0;
+  const idealBat=Math.max(8, Math.round((dagSurplus+evDag+omv*4)/2)*2); // 4u omvormer
+  const batCapped=Math.min(idealBat, 40);
+
+  // 2. Beste strategie: bij veel zon -> slim, bij weinig zon -> maximaal arbitrage
+  const zonRatio=opwek/verbruik;
+  const stratKeuze = zonRatio>0.8 ? 'slim' : 'max';
+
+  // 3. Drempels: gebaseerd op historisch EPEX profiel realistisch
+  const prijzen=HOUR_PROFILES.real.map(p=>toAllin(p,0.018));
+  const sorted=[...prijzen].sort((a,b)=>a-b);
+  const optLaad=+(sorted.slice(0,4).reduce((s,v)=>s+v,0)/4).toFixed(2);
+  const optVerk=+(sorted.slice(-4).reduce((s,v)=>s+v,0)/4).toFixed(2);
+
+  // 4. SoC venster: afhankelijk van strategie
+  const socMinOpt = stratKeuze==='max' ? 5 : 10;
+  const socMaxOpt = stratKeuze==='max' ? 95 : 90;
+
+  // 5. Cycli: fysiek max gegeven omvormer + batterij
+  const maxCycliDag=Math.min((omv*20)/batCapped, 1.5);
+  const optCycli=Math.min(Math.round(maxCycliDag*365*0.85), stratKeuze==='max'?350:250);
+
+  // 6. Beste provider: dynamisch, laagste opslag
+  const bestDyn=PROVIDERS.filter(p=>p.type==='dyn').sort((a,b)=>a.opslag-b.opslag)[0];
+
+  // Pas alles toe
+  g('sl-bat').value=batCapped;
+  g('sl-cycli').value=optCycli;
+  g('sl-laaddrempel').value=optLaad;
+  g('sl-verkdrempel').value=optVerk;
+  g('sl-socmin').value=socMinOpt;
+  g('sl-socmax').value=socMaxOpt;
+  g('sl-degr').value=2.5;
+  setStrategy('custom');
+  setContract('dyn');
+  setSal(0); // na 2027
+
+  if(bestDyn){
+    g('prov-select').value=bestDyn.id;
+    setProvider();
+  }
+
+  setBat('custom');
+  update();
+
+  // Toon bevestiging
+  const btn=event.target;
+  const orig=btn.innerHTML;
+  btn.innerHTML='&#x2713; Ingesteld!';
+  btn.style.background='linear-gradient(135deg,rgba(90,219,138,.35),rgba(90,219,138,.15))';
+  setTimeout(()=>{
+    btn.innerHTML=orig;
+    btn.style.background='';
+  }, 2500);
+}
+
 buildDropdown();
 loadURL();
 update();
+injectTipIcons();
 </script>
 </body>
 </html>
